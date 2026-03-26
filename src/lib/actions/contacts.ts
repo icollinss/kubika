@@ -1,0 +1,96 @@
+"use server";
+
+import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
+import { redirect } from "next/navigation";
+
+const contactSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Invalid email").optional().or(z.literal("")),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  country: z.string().default("Angola"),
+  taxId: z.string().optional(),
+  notes: z.string().optional(),
+  type: z.enum(["CUSTOMER", "SUPPLIER", "BOTH"]).default("CUSTOMER"),
+});
+
+export type ContactFormData = z.infer<typeof contactSchema>;
+
+async function getCompanyId() {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { companyId: true },
+  });
+  if (!user?.companyId) throw new Error("No company found");
+  return user.companyId;
+}
+
+export async function createContact(data: ContactFormData) {
+  const companyId = await getCompanyId();
+  const parsed = contactSchema.parse(data);
+
+  await prisma.contact.create({
+    data: { ...parsed, companyId },
+  });
+
+  revalidatePath("/dashboard/contacts");
+  redirect("/dashboard/contacts");
+}
+
+export async function updateContact(id: string, data: ContactFormData) {
+  const companyId = await getCompanyId();
+  const parsed = contactSchema.parse(data);
+
+  await prisma.contact.update({
+    where: { id, companyId },
+    data: parsed,
+  });
+
+  revalidatePath("/dashboard/contacts");
+  redirect(`/dashboard/contacts/${id}`);
+}
+
+export async function deleteContact(id: string) {
+  const companyId = await getCompanyId();
+
+  await prisma.contact.delete({
+    where: { id, companyId },
+  });
+
+  revalidatePath("/dashboard/contacts");
+  redirect("/dashboard/contacts");
+}
+
+export async function getContacts(search?: string, type?: string) {
+  const companyId = await getCompanyId();
+
+  return prisma.contact.findMany({
+    where: {
+      companyId,
+      ...(type && type !== "ALL" ? { type: type as "CUSTOMER" | "SUPPLIER" | "BOTH" } : {}),
+      ...(search
+        ? {
+            OR: [
+              { name: { contains: search, mode: "insensitive" } },
+              { email: { contains: search, mode: "insensitive" } },
+              { phone: { contains: search, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+    },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
+export async function getContact(id: string) {
+  const companyId = await getCompanyId();
+  return prisma.contact.findUnique({
+    where: { id, companyId },
+  });
+}

@@ -86,10 +86,35 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+// ─── Contacts ────────────────────────────────────────────────────────────────
+
+model Contact {
+  id        String      @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  address   String?
+  city      String?
+  country   String      @default("Angola")
+  taxId     String?     // NIF
+  notes     String?
+  type      ContactType @default(CUSTOMER)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  companyId String
+}
+
 // ─── Enums ───────────────────────────────────────────────────────────────────
 
 enum Role {
   ADMIN
   MANAGER
   STAFF
+}
+
+enum ContactType {
+  CUSTOMER
+  SUPPLIER
+  BOTH
 }
