@@ -14,6 +14,7 @@ import {
   Building2,
   Warehouse,
   ClipboardList,
+  FileText,
   ChevronDown,
   ChevronRight,
 } from "lucide-react";
@@ -23,14 +24,20 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard/contacts", label: "Contacts", icon: Users },
   {
-    label: "Inventory", icon: Package,
+    label: "Inventory", icon: Package, key: "inventory", basePath: "/dashboard/inventory",
     children: [
       { href: "/dashboard/inventory/products", label: "Products", icon: Package },
       { href: "/dashboard/inventory/operations", label: "Operations", icon: ClipboardList },
       { href: "/dashboard/inventory/warehouses", label: "Warehouses", icon: Warehouse },
     ],
   },
-  { href: "/dashboard/sales", label: "Sales", icon: ShoppingCart },
+  {
+    label: "Sales", icon: ShoppingCart, key: "sales", basePath: "/dashboard/sales",
+    children: [
+      { href: "/dashboard/sales/orders", label: "Orders", icon: ShoppingCart },
+      { href: "/dashboard/sales/invoices", label: "Invoices", icon: FileText },
+    ],
+  },
   { href: "/dashboard/accounting", label: "Accounting", icon: Receipt },
   { href: "/dashboard/reports", label: "Reports", icon: BarChart3 },
 ];
@@ -43,6 +50,7 @@ const bottomItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const [inventoryOpen, setInventoryOpen] = useState(pathname.startsWith("/dashboard/inventory"));
+  const [salesOpen, setSalesOpen] = useState(pathname.startsWith("/dashboard/sales"));
 
   return (
     <aside className="flex flex-col w-64 min-h-screen bg-card border-r">
@@ -56,11 +64,13 @@ export function Sidebar() {
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           if ("children" in item) {
-            const isActive = pathname.startsWith("/dashboard/inventory");
+            const isActive = pathname.startsWith(item.basePath);
+            const isOpen = item.key === "sales" ? salesOpen : inventoryOpen;
+            const toggle = item.key === "sales" ? () => setSalesOpen(!salesOpen) : () => setInventoryOpen(!inventoryOpen);
             return (
               <div key={item.label}>
                 <button
-                  onClick={() => setInventoryOpen(!inventoryOpen)}
+                  onClick={toggle}
                   className={cn(
                     "w-full flex items-center justify-between gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
                     isActive ? "text-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -70,9 +80,9 @@ export function Sidebar() {
                     <item.icon className="h-4 w-4 shrink-0" />
                     {item.label}
                   </span>
-                  {inventoryOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                  {isOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
                 </button>
-                {inventoryOpen && (
+                {isOpen && (
                   <div className="ml-4 mt-1 space-y-1 border-l pl-3">
                     {item.children.map(({ href, label, icon: Icon }) => (
                       <Link
