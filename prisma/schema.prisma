@@ -617,3 +617,103 @@ enum BillStatus {
   OVERDUE
   CANCELLED
 }
+
+// ─── Accounting: Chart of Accounts ───────────────────────────────────────────
+
+model LedgerAccount {
+  id            String      @id @default(cuid())
+  code          String      // e.g. "1100", "3100"
+  name          String      // e.g. "Cash", "Revenue from Sales"
+  type          AccountType
+  subtype       String?     // e.g. "Current Asset", "Fixed Asset"
+  description   String?
+  parentId      String?
+  parent        LedgerAccount?    @relation("AccountTree", fields: [parentId], references: [id])
+  children      LedgerAccount[]   @relation("AccountTree")
+  isActive      Boolean     @default(true)
+  allowReconciliation Boolean @default(false)
+  currency      String      @default("AOA")
+  companyId     String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  debitLines    JournalEntryLine[] @relation("DebitAccount")
+  creditLines   JournalEntryLine[] @relation("CreditAccount")
+}
+
+// ─── Accounting: Journal Entries ──────────────────────────────────────────────
+
+model JournalEntry {
+  id          String             @id @default(cuid())
+  number      String             // e.g. JE/2026/001
+  date        DateTime           @default(now())
+  description String
+  reference   String?            // SO/001, PO/001, etc.
+  entryType   JournalEntryType   @default(MANUAL)
+  status      JournalStatus      @default(DRAFT)
+  companyId   String
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  lines       JournalEntryLine[]
+}
+
+model JournalEntryLine {
+  id            String       @id @default(cuid())
+  entryId       String
+  entry         JournalEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  debitAccountId  String?
+  debitAccount    LedgerAccount?   @relation("DebitAccount", fields: [debitAccountId], references: [id])
+  creditAccountId String?
+  creditAccount   LedgerAccount?   @relation("CreditAccount", fields: [creditAccountId], references: [id])
+  amount        Float
+  description   String?
+  sequence      Int          @default(0)
+}
+
+// ─── Accounting: Tax Entries ──────────────────────────────────────────────────
+
+model TaxEntry {
+  id          String    @id @default(cuid())
+  taxType     TaxType
+  rate        Float
+  baseAmount  Float
+  taxAmount   Float
+  period      String    // e.g. "2026-03" (year-month)
+  reference   String?   // invoice/bill number
+  companyId   String
+  createdAt   DateTime  @default(now())
+}
+
+// ─── Accounting Enums ─────────────────────────────────────────────────────────
+
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+enum JournalEntryType {
+  MANUAL
+  SALE
+  PURCHASE
+  PAYMENT
+  RECEIPT
+  ADJUSTMENT
+  DEPRECIATION
+}
+
+enum JournalStatus {
+  DRAFT
+  POSTED
+  CANCELLED
+}
+
+enum TaxType {
+  IVA        // Imposto sobre Valor Acrescentado (VAT 14%)
+  IRT        // Imposto sobre Rendimento do Trabalho
+  II         // Imposto Industrial
+  IS         // Imposto de Selo
+}
