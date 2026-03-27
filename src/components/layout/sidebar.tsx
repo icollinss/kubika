@@ -15,6 +15,7 @@ import {
   Warehouse,
   ClipboardList,
   FileText,
+  ShoppingBag,
   ChevronDown,
   ChevronRight,
 } from "lucide-react";
@@ -38,6 +39,13 @@ const navItems = [
       { href: "/dashboard/sales/invoices", label: "Invoices", icon: FileText },
     ],
   },
+  {
+    label: "Purchasing", icon: ShoppingBag, key: "purchasing", basePath: "/dashboard/purchasing",
+    children: [
+      { href: "/dashboard/purchasing/orders", label: "Purchase Orders", icon: ShoppingBag },
+      { href: "/dashboard/purchasing/bills", label: "Supplier Bills", icon: Receipt },
+    ],
+  },
   { href: "/dashboard/accounting", label: "Accounting", icon: Receipt },
   { href: "/dashboard/reports", label: "Reports", icon: BarChart3 },
 ];
@@ -51,6 +59,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const [inventoryOpen, setInventoryOpen] = useState(pathname.startsWith("/dashboard/inventory"));
   const [salesOpen, setSalesOpen] = useState(pathname.startsWith("/dashboard/sales"));
+  const [purchasingOpen, setPurchasingOpen] = useState(pathname.startsWith("/dashboard/purchasing"));
 
   return (
     <aside className="flex flex-col w-64 min-h-screen bg-card border-r">
@@ -65,8 +74,8 @@ export function Sidebar() {
         {navItems.map((item) => {
           if ("children" in item) {
             const isActive = pathname.startsWith(item.basePath);
-            const isOpen = item.key === "sales" ? salesOpen : inventoryOpen;
-            const toggle = item.key === "sales" ? () => setSalesOpen(!salesOpen) : () => setInventoryOpen(!inventoryOpen);
+            const isOpen = item.key === "sales" ? salesOpen : item.key === "purchasing" ? purchasingOpen : inventoryOpen;
+            const toggle = item.key === "sales" ? () => setSalesOpen(!salesOpen) : item.key === "purchasing" ? () => setPurchasingOpen(!purchasingOpen) : () => setInventoryOpen(!inventoryOpen);
             return (
               <div key={item.label}>
                 <button

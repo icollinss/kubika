@@ -104,8 +104,10 @@ model Contact {
 
   companyId String
 
-  salesOrders SalesOrder[]
-  invoices    Invoice[]
+  salesOrders     SalesOrder[]
+  invoices        Invoice[]
+  purchaseOrders  PurchaseOrder[]
+  supplierBills   SupplierBill[]
 }
 
 // ─── Inventory: Units of Measure ─────────────────────────────────────────────
@@ -206,6 +208,8 @@ model Product {
   serials         SerialNumber[]
   salesLines      SalesOrderLine[]
   invoiceLines    InvoiceLine[]
+  purchaseLines   PurchaseOrderLine[]
+  billLines       SupplierBillLine[]
 }
 
 // ─── Inventory: Product Variants ─────────────────────────────────────────────
@@ -497,4 +501,119 @@ enum PaymentMethod {
   MOBILE_MONEY   // e.g. Multicaixa Express
   CHECK
   CREDIT
+}
+
+// ─── Purchasing ───────────────────────────────────────────────────────────────
+
+model PurchaseOrder {
+  id            String          @id @default(cuid())
+  number        String          // e.g. PO/2026/001
+  status        PurchaseStatus  @default(DRAFT)
+  supplierId    String
+  supplier      Contact         @relation(fields: [supplierId], references: [id])
+  orderDate     DateTime        @default(now())
+  expectedDate  DateTime?
+  currency      String          @default("AOA")
+  notes         String?
+
+  subtotal      Float           @default(0)
+  taxAmount     Float           @default(0)
+  total         Float           @default(0)
+
+  companyId     String
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  lines         PurchaseOrderLine[]
+  bills         SupplierBill[]
+}
+
+model PurchaseOrderLine {
+  id            String        @id @default(cuid())
+  orderId       String
+  order         PurchaseOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId     String
+  product       Product       @relation(fields: [productId], references: [id])
+  description   String?
+  quantity      Float
+  unitPrice     Float
+  taxRate       Float         @default(14)
+  subtotal      Float         @default(0)
+  total         Float         @default(0)
+  qtyReceived   Float         @default(0)
+  sequence      Int           @default(0)
+}
+
+// ─── Supplier Bills ───────────────────────────────────────────────────────────
+
+model SupplierBill {
+  id            String      @id @default(cuid())
+  number        String      // e.g. VB/2026/001
+  status        BillStatus  @default(DRAFT)
+  orderId       String?
+  order         PurchaseOrder? @relation(fields: [orderId], references: [id])
+  supplierId    String
+  supplier      Contact     @relation(fields: [supplierId], references: [id])
+  billDate      DateTime    @default(now())
+  dueDate       DateTime?
+  currency      String      @default("AOA")
+  notes         String?
+
+  subtotal      Float       @default(0)
+  taxAmount     Float       @default(0)
+  total         Float       @default(0)
+  amountPaid    Float       @default(0)
+  amountDue     Float       @default(0)
+
+  companyId     String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  lines         SupplierBillLine[]
+  payments      BillPayment[]
+}
+
+model SupplierBillLine {
+  id          String       @id @default(cuid())
+  billId      String
+  bill        SupplierBill @relation(fields: [billId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product      @relation(fields: [productId], references: [id])
+  description String?
+  quantity    Float
+  unitPrice   Float
+  taxRate     Float        @default(14)
+  subtotal    Float        @default(0)
+  total       Float        @default(0)
+  sequence    Int          @default(0)
+}
+
+model BillPayment {
+  id        String        @id @default(cuid())
+  billId    String
+  bill      SupplierBill  @relation(fields: [billId], references: [id])
+  amount    Float
+  currency  String        @default("AOA")
+  method    PaymentMethod @default(CASH)
+  reference String?
+  paidAt    DateTime      @default(now())
+  notes     String?
+  companyId String
+  createdAt DateTime      @default(now())
+}
+
+enum PurchaseStatus {
+  DRAFT
+  CONFIRMED
+  RECEIVED
+  CANCELLED
+}
+
+enum BillStatus {
+  DRAFT
+  CONFIRMED
+  PAID
+  PARTIAL
+  OVERDUE
+  CANCELLED
 }
