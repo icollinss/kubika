@@ -16,6 +16,9 @@ import {
   ClipboardList,
   FileText,
   ShoppingBag,
+  BookOpen,
+  TrendingUp,
+  Scale,
   ChevronDown,
   ChevronRight,
 } from "lucide-react";
@@ -46,7 +49,15 @@ const navItems = [
       { href: "/dashboard/purchasing/bills", label: "Supplier Bills", icon: Receipt },
     ],
   },
-  { href: "/dashboard/accounting", label: "Accounting", icon: Receipt },
+  {
+    label: "Accounting", icon: Receipt, key: "accounting", basePath: "/dashboard/accounting",
+    children: [
+      { href: "/dashboard/accounting", label: "Chart of Accounts", icon: BookOpen },
+      { href: "/dashboard/accounting/journal", label: "Journal Entries", icon: FileText },
+      { href: "/dashboard/accounting/reports/pl", label: "Profit & Loss", icon: TrendingUp },
+      { href: "/dashboard/accounting/reports/balance-sheet", label: "Balance Sheet", icon: Scale },
+    ],
+  },
   { href: "/dashboard/reports", label: "Reports", icon: BarChart3 },
 ];
 
@@ -60,6 +71,7 @@ export function Sidebar() {
   const [inventoryOpen, setInventoryOpen] = useState(pathname.startsWith("/dashboard/inventory"));
   const [salesOpen, setSalesOpen] = useState(pathname.startsWith("/dashboard/sales"));
   const [purchasingOpen, setPurchasingOpen] = useState(pathname.startsWith("/dashboard/purchasing"));
+  const [accountingOpen, setAccountingOpen] = useState(pathname.startsWith("/dashboard/accounting"));
 
   return (
     <aside className="flex flex-col w-64 min-h-screen bg-card border-r">
@@ -74,8 +86,8 @@ export function Sidebar() {
         {navItems.map((item) => {
           if ("children" in item) {
             const isActive = pathname.startsWith(item.basePath);
-            const isOpen = item.key === "sales" ? salesOpen : item.key === "purchasing" ? purchasingOpen : inventoryOpen;
-            const toggle = item.key === "sales" ? () => setSalesOpen(!salesOpen) : item.key === "purchasing" ? () => setPurchasingOpen(!purchasingOpen) : () => setInventoryOpen(!inventoryOpen);
+            const isOpen = item.key === "sales" ? salesOpen : item.key === "purchasing" ? purchasingOpen : item.key === "accounting" ? accountingOpen : inventoryOpen;
+            const toggle = item.key === "sales" ? () => setSalesOpen(!salesOpen) : item.key === "purchasing" ? () => setPurchasingOpen(!purchasingOpen) : item.key === "accounting" ? () => setAccountingOpen(!accountingOpen) : () => setInventoryOpen(!inventoryOpen);
             return (
               <div key={item.label}>
                 <button
