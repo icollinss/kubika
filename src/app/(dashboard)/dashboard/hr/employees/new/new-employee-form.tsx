@@ -16,24 +16,27 @@ export function NewEmployeeForm({ departments }: { departments: Department[] }) 
   const [loading, setLoading] = useState(false);
   const [deptId, setDeptId] = useState("");
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     const fd = new FormData(e.currentTarget);
-    await createEmployee({
-      firstName: fd.get("firstName") as string,
-      lastName: fd.get("lastName") as string,
-      email: fd.get("email") as string || undefined,
-      phone: fd.get("phone") as string || undefined,
-      nif: fd.get("nif") as string || undefined,
-      inssNumber: fd.get("inssNumber") as string || undefined,
-      dateOfBirth: fd.get("dateOfBirth") as string || undefined,
-      hireDate: fd.get("hireDate") as string,
-      jobTitle: fd.get("jobTitle") as string || undefined,
-      departmentId: deptId || undefined,
-    });
-    setLoading(false);
-    router.push("/dashboard/hr/employees");
+    try {
+      await createEmployee({
+        firstName: fd.get("firstName") as string,
+        lastName: fd.get("lastName") as string,
+        email: fd.get("email") as string || undefined,
+        phone: fd.get("phone") as string || undefined,
+        nif: fd.get("nif") as string || undefined,
+        inssNumber: fd.get("inssNumber") as string || undefined,
+        dateOfBirth: fd.get("dateOfBirth") as string || undefined,
+        hireDate: fd.get("hireDate") as string,
+        jobTitle: fd.get("jobTitle") as string || undefined,
+        departmentId: deptId || undefined,
+      });
+      router.push("/dashboard/hr/employees");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
