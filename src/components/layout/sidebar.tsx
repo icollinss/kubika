@@ -19,6 +19,8 @@ import {
   BookOpen,
   TrendingUp,
   Scale,
+  Users2,
+  Banknote,
   ChevronDown,
   ChevronRight,
 } from "lucide-react";
@@ -62,6 +64,13 @@ const navItems: NavItem[] = [
       { href: "/dashboard/accounting/reports/balance-sheet", label: "Balance Sheet", icon: Scale },
     ],
   },
+  {
+    label: "HR & Payroll", icon: Users2, key: "hr", basePath: "/dashboard/hr",
+    children: [
+      { href: "/dashboard/hr/employees", label: "Employees", icon: Users2 },
+      { href: "/dashboard/hr/payroll", label: "Payroll", icon: Banknote },
+    ],
+  },
   { href: "/dashboard/reports", label: "Reports", icon: BarChart3 },
 ];
 
@@ -76,6 +85,7 @@ export function Sidebar() {
   const [salesOpen, setSalesOpen] = useState(pathname.startsWith("/dashboard/sales"));
   const [purchasingOpen, setPurchasingOpen] = useState(pathname.startsWith("/dashboard/purchasing"));
   const [accountingOpen, setAccountingOpen] = useState(pathname.startsWith("/dashboard/accounting"));
+  const [hrOpen, setHrOpen] = useState(pathname.startsWith("/dashboard/hr"));
 
   return (
     <aside className="flex flex-col w-64 min-h-screen bg-card border-r">
@@ -91,8 +101,8 @@ export function Sidebar() {
           if ("children" in item) {
             const group = item as NavGroup;
             const isActive = pathname.startsWith(group.basePath);
-            const isOpen = group.key === "sales" ? salesOpen : group.key === "purchasing" ? purchasingOpen : group.key === "accounting" ? accountingOpen : inventoryOpen;
-            const toggle = group.key === "sales" ? () => setSalesOpen(!salesOpen) : group.key === "purchasing" ? () => setPurchasingOpen(!purchasingOpen) : group.key === "accounting" ? () => setAccountingOpen(!accountingOpen) : () => setInventoryOpen(!inventoryOpen);
+            const isOpen = group.key === "sales" ? salesOpen : group.key === "purchasing" ? purchasingOpen : group.key === "accounting" ? accountingOpen : group.key === "hr" ? hrOpen : inventoryOpen;
+            const toggle = group.key === "sales" ? () => setSalesOpen(!salesOpen) : group.key === "purchasing" ? () => setPurchasingOpen(!purchasingOpen) : group.key === "accounting" ? () => setAccountingOpen(!accountingOpen) : group.key === "hr" ? () => setHrOpen(!hrOpen) : () => setInventoryOpen(!inventoryOpen);
             return (
               <div key={group.label}>
                 <button
