@@ -24,7 +24,11 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-const navItems = [
+type NavLeaf = { href: string; label: string; icon: React.ElementType };
+type NavGroup = { label: string; icon: React.ElementType; key: string; basePath: string; children: NavLeaf[] };
+type NavItem = NavLeaf | NavGroup;
+
+const navItems: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard/contacts", label: "Contacts", icon: Users },
   {
@@ -85,11 +89,12 @@ export function Sidebar() {
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           if ("children" in item) {
-            const isActive = pathname.startsWith(item.basePath);
-            const isOpen = item.key === "sales" ? salesOpen : item.key === "purchasing" ? purchasingOpen : item.key === "accounting" ? accountingOpen : inventoryOpen;
-            const toggle = item.key === "sales" ? () => setSalesOpen(!salesOpen) : item.key === "purchasing" ? () => setPurchasingOpen(!purchasingOpen) : item.key === "accounting" ? () => setAccountingOpen(!accountingOpen) : () => setInventoryOpen(!inventoryOpen);
+            const group = item as NavGroup;
+            const isActive = pathname.startsWith(group.basePath);
+            const isOpen = group.key === "sales" ? salesOpen : group.key === "purchasing" ? purchasingOpen : group.key === "accounting" ? accountingOpen : inventoryOpen;
+            const toggle = group.key === "sales" ? () => setSalesOpen(!salesOpen) : group.key === "purchasing" ? () => setPurchasingOpen(!purchasingOpen) : group.key === "accounting" ? () => setAccountingOpen(!accountingOpen) : () => setInventoryOpen(!inventoryOpen);
             return (
-              <div key={item.label}>
+              <div key={group.label}>
                 <button
                   onClick={toggle}
                   className={cn(
@@ -98,14 +103,14 @@ export function Sidebar() {
                   )}
                 >
                   <span className="flex items-center gap-3">
-                    <item.icon className="h-4 w-4 shrink-0" />
-                    {item.label}
+                    <group.icon className="h-4 w-4 shrink-0" />
+                    {group.label}
                   </span>
                   {isOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
                 </button>
                 {isOpen && (
                   <div className="ml-4 mt-1 space-y-1 border-l pl-3">
-                    {item.children.map(({ href, label, icon: Icon }) => (
+                    {group.children.map(({ href, label, icon: Icon }) => (
                       <Link
                         key={href}
                         href={href}

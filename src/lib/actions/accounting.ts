@@ -2,13 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authConfig } from "@/auth.config";
+import { auth } from "@/auth";
 
 async function getCompanyId(): Promise<string> {
-  const session = await getServerSession(authConfig);
-  if (!session?.user?.companyId) throw new Error("Unauthorized");
-  return session.user.companyId;
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { companyId: true },
+  });
+  if (!user?.companyId) throw new Error("No company");
+  return user.companyId;
 }
 
 async function nextJournalNumber(companyId: string): Promise<string> {
@@ -63,15 +67,19 @@ export async function updateAccount(id: string, data: {
 
 export async function getJournalEntries(filters?: { status?: string; from?: string; to?: string }) {
   const companyId = await getCompanyId();
-  const where: Record<string, unknown> = { companyId };
-  if (filters?.status) where.status = filters.status;
-  if (filters?.from || filters?.to) {
-    where.date = {};
-    if (filters.from) (where.date as Record<string, unknown>).gte = new Date(filters.from);
-    if (filters.to) (where.date as Record<string, unknown>).lte = new Date(filters.to);
-  }
   return prisma.journalEntry.findMany({
-    where,
+    where: {
+      companyId,
+      ...(filters?.status ? { status: filters.status as "DRAFT" | "POSTED" | "CANCELLED" } : {}),
+      ...(filters?.from || filters?.to
+        ? {
+            date: {
+              ...(filters.from ? { gte: new Date(filters.from) } : {}),
+              ...(filters.to ? { lte: new Date(filters.to) } : {}),
+            },
+          }
+        : {}),
+    },
     include: { lines: { include: { debitAccount: true, creditAccount: true } } },
     orderBy: { date: "desc" },
   });
@@ -81,7 +89,12 @@ export async function getJournalEntry(id: string) {
   const companyId = await getCompanyId();
   return prisma.journalEntry.findFirst({
     where: { id, companyId },
-    include: { lines: { include: { debitAccount: true, creditAccount: true }, orderBy: { sequence: "asc" } } },
+    include: {
+      lines: {
+        include: { debitAccount: true, creditAccount: true },
+        orderBy: { sequence: "asc" },
+      },
+    },
   });
 }
 
@@ -126,7 +139,7 @@ export async function postJournalEntry(id: string) {
   const companyId = await getCompanyId();
   const entry = await prisma.journalEntry.update({
     where: { id, companyId },
-    data: { status: "CONFIRMED" },
+    data: { status: "POSTED" },
   });
   revalidatePath("/dashboard/accounting/journal");
   return entry;
@@ -140,12 +153,12 @@ export async function getLedger(accountId: string) {
   if (!account) throw new Error("Account not found");
 
   const debits = await prisma.journalEntryLine.findMany({
-    where: { debitAccountId: accountId, entry: { companyId, status: "CONFIRMED" } },
+    where: { debitAccountId: accountId, entry: { companyId, status: "POSTED" } },
     include: { entry: true },
     orderBy: { entry: { date: "asc" } },
   });
   const credits = await prisma.journalEntryLine.findMany({
-    where: { creditAccountId: accountId, entry: { companyId, status: "CONFIRMED" } },
+    where: { creditAccountId: accountId, entry: { companyId, status: "POSTED" } },
     include: { entry: true },
     orderBy: { entry: { date: "asc" } },
   });
@@ -161,10 +174,10 @@ export async function getProfitAndLoss(from: string, to: string) {
     where: { companyId, type: { in: ["REVENUE", "EXPENSE"] }, isActive: true },
     include: {
       debitLines: {
-        where: { entry: { companyId, status: "CONFIRMED", date: { gte: new Date(from), lte: new Date(to) } } },
+        where: { entry: { companyId, status: "POSTED", date: { gte: new Date(from), lte: new Date(to) } } },
       },
       creditLines: {
-        where: { entry: { companyId, status: "CONFIRMED", date: { gte: new Date(from), lte: new Date(to) } } },
+        where: { entry: { companyId, status: "POSTED", date: { gte: new Date(from), lte: new Date(to) } } },
       },
     },
     orderBy: { code: "asc" },
@@ -174,8 +187,8 @@ export async function getProfitAndLoss(from: string, to: string) {
   const expenses: Array<{ code: string; name: string; balance: number }> = [];
 
   for (const acc of accounts) {
-    const credits = acc.creditLines.reduce((s, l) => s + l.amount, 0);
-    const debits = acc.debitLines.reduce((s, l) => s + l.amount, 0);
+    const credits = acc.creditLines.reduce((s: number, l: { amount: number }) => s + l.amount, 0);
+    const debits = acc.debitLines.reduce((s: number, l: { amount: number }) => s + l.amount, 0);
     const balance = acc.type === "REVENUE" ? credits - debits : debits - credits;
     if (balance === 0) continue;
     const row = { code: acc.code, name: acc.name, balance };
@@ -198,10 +211,10 @@ export async function getBalanceSheet(asOf: string) {
     where: { companyId, type: { in: ["ASSET", "LIABILITY", "EQUITY"] }, isActive: true },
     include: {
       debitLines: {
-        where: { entry: { companyId, status: "CONFIRMED", date: { lte: new Date(asOf) } } },
+        where: { entry: { companyId, status: "POSTED", date: { lte: new Date(asOf) } } },
       },
       creditLines: {
-        where: { entry: { companyId, status: "CONFIRMED", date: { lte: new Date(asOf) } } },
+        where: { entry: { companyId, status: "POSTED", date: { lte: new Date(asOf) } } },
       },
     },
     orderBy: { code: "asc" },
@@ -212,9 +225,8 @@ export async function getBalanceSheet(asOf: string) {
   const equity: Array<{ code: string; name: string; balance: number }> = [];
 
   for (const acc of accounts) {
-    const debits = acc.debitLines.reduce((s, l) => s + l.amount, 0);
-    const credits = acc.creditLines.reduce((s, l) => s + l.amount, 0);
-    // Assets: normal debit balance; Liabilities/Equity: normal credit balance
+    const debits = acc.debitLines.reduce((s: number, l: { amount: number }) => s + l.amount, 0);
+    const credits = acc.creditLines.reduce((s: number, l: { amount: number }) => s + l.amount, 0);
     const balance = acc.type === "ASSET" ? debits - credits : credits - debits;
     if (balance === 0) continue;
     const row = { code: acc.code, name: acc.name, balance };
