@@ -669,6 +669,8 @@ model JournalEntryLine {
   amount        Float
   description   String?
   sequence      Int          @default(0)
+  analyticAccountId String?
+  analyticAccount   AnalyticAccount? @relation(fields: [analyticAccountId], references: [id])
 }
 
 // ─── Accounting: Tax Entries ──────────────────────────────────────────────────
@@ -718,6 +720,139 @@ enum TaxType {
   IS         // Imposto de Selo
 }
 
+// ─── Projects & Analytic Accounting ──────────────────────────────────────────
+
+model AnalyticAccount {
+  id          String   @id @default(cuid())
+  code        String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  companyId   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  projects    Project[]
+  journalLines JournalEntryLine[]
+  expenses    ProjectExpense[]
+}
+
+model Project {
+  id               String        @id @default(cuid())
+  name             String
+  description      String?
+  reference        String?       // e.g. PRJ/2026/001
+  status           ProjectStatus @default(DRAFT)
+  priority         Priority      @default(MEDIUM)
+  startDate        DateTime?
+  endDate          DateTime?
+  budget           Float         @default(0)
+  currency         String        @default("AOA")
+  managerId        String?       // Employee id
+  analyticAccountId String?
+  analyticAccount  AnalyticAccount? @relation(fields: [analyticAccountId], references: [id])
+  companyId        String
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  milestones   ProjectMilestone[]
+  tasks        ProjectTask[]
+  expenses     ProjectExpense[]
+  timesheets   Timesheet[]
+}
+
+model ProjectMilestone {
+  id          String            @id @default(cuid())
+  projectId   String
+  project     Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  dueDate     DateTime?
+  isDone      Boolean           @default(false)
+  doneAt      DateTime?
+  sequence    Int               @default(0)
+  companyId   String
+  createdAt   DateTime          @default(now())
+
+  tasks       ProjectTask[]
+}
+
+model ProjectTask {
+  id          String      @id @default(cuid())
+  projectId   String
+  project     Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  milestoneId String?
+  milestone   ProjectMilestone? @relation(fields: [milestoneId], references: [id])
+  title       String
+  description String?
+  status      TaskStatus  @default(TODO)
+  priority    Priority    @default(MEDIUM)
+  assigneeId  String?     // Employee id
+  dueDate     DateTime?
+  estimatedHours Float    @default(0)
+  sequence    Int         @default(0)
+  companyId   String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  timesheets  Timesheet[]
+}
+
+model Timesheet {
+  id          String      @id @default(cuid())
+  projectId   String
+  project     Project     @relation(fields: [projectId], references: [id])
+  taskId      String?
+  task        ProjectTask? @relation(fields: [taskId], references: [id])
+  employeeId  String
+  employee    Employee    @relation(fields: [employeeId], references: [id])
+  date        DateTime
+  hours       Float
+  description String?
+  companyId   String
+  createdAt   DateTime    @default(now())
+}
+
+model ProjectExpense {
+  id               String          @id @default(cuid())
+  projectId        String
+  project          Project         @relation(fields: [projectId], references: [id])
+  analyticAccountId String?
+  analyticAccount  AnalyticAccount? @relation(fields: [analyticAccountId], references: [id])
+  description      String
+  amount           Float
+  date             DateTime        @default(now())
+  category         String?         // e.g. "Labour", "Materials", "Travel"
+  reference        String?         // Journal entry number
+  companyId        String
+  createdAt        DateTime        @default(now())
+}
+
+// ─── Project Enums ────────────────────────────────────────────────────────────
+
+enum ProjectStatus {
+  DRAFT
+  IN_PROGRESS
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+  CANCELLED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
 // ─── HR Models ────────────────────────────────────────────────────────────────
 
 model Department {
@@ -754,6 +889,7 @@ model Employee {
   contracts     Contract[]
   attendances   Attendance[]
   payslips      Payslip[]
+  timesheets    Timesheet[]
 }
 
 model Contract {

@@ -21,6 +21,7 @@ import {
   Scale,
   Users2,
   Banknote,
+  FolderKanban,
   ChevronDown,
   ChevronRight,
 } from "lucide-react";
@@ -71,6 +72,7 @@ const navItems: NavItem[] = [
       { href: "/dashboard/hr/payroll", label: "Payroll", icon: Banknote },
     ],
   },
+  { href: "/dashboard/projects", label: "Projects", icon: FolderKanban },
   { href: "/dashboard/reports", label: "Reports", icon: BarChart3 },
 ];
 
