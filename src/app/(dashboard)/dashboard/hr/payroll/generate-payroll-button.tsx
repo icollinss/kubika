@@ -13,11 +13,14 @@ export function GeneratePayrollButton({ period }: { period: string }) {
   async function handleGenerate() {
     if (!confirm(`Generate payroll for ${period}? This will create payslips for all active employees with active contracts.`)) return;
     setLoading(true);
-    const result = await generatePayroll(period);
-    setLoading(false);
-    router.refresh();
-    if (result.generated === 0) alert("No new payslips to generate (all employees may already have payslips for this period).");
-    else alert(`Generated ${result.generated} payslip(s).`);
+    try {
+      const result = await generatePayroll(period);
+      router.refresh();
+      if (result.generated === 0) alert("No new payslips to generate (all employees may already have payslips for this period).");
+      else alert(`Generated ${result.generated} payslip(s).`);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

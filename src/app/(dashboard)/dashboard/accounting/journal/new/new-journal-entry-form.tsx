@@ -35,25 +35,27 @@ export function NewJournalEntryForm({ accounts }: { accounts: Account[] }) {
   const totalCredit = lines.reduce((s, l) => s + (l.creditAccountId ? parseFloat(l.amount || "0") : 0), 0);
   const balanced = Math.abs(totalDebit - totalCredit) < 0.01;
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!balanced) return;
     setLoading(true);
-    const form = e.currentTarget;
-    const fd = new FormData(form);
-    await createJournalEntry({
-      date: fd.get("date") as string,
-      description: fd.get("description") as string,
-      reference: fd.get("reference") as string || undefined,
-      lines: lines.map((l) => ({
-        debitAccountId: l.debitAccountId || undefined,
-        creditAccountId: l.creditAccountId || undefined,
-        amount: parseFloat(l.amount || "0"),
-        description: l.description || undefined,
-      })),
-    });
-    setLoading(false);
-    router.push("/dashboard/accounting/journal");
+    const fd = new FormData(e.currentTarget);
+    try {
+      await createJournalEntry({
+        date: fd.get("date") as string,
+        description: fd.get("description") as string,
+        reference: fd.get("reference") as string || undefined,
+        lines: lines.map((l) => ({
+          debitAccountId: l.debitAccountId || undefined,
+          creditAccountId: l.creditAccountId || undefined,
+          amount: parseFloat(l.amount || "0"),
+          description: l.description || undefined,
+        })),
+      });
+      router.push("/dashboard/accounting/journal");
+    } finally {
+      setLoading(false);
+    }
   }
 
   const AccountSelect = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (

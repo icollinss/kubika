@@ -16,23 +16,26 @@ export function AddContractButton({ employeeId }: { employeeId: string }) {
   const [contractType, setContractType] = useState("PERMANENT");
   const router = useRouter();
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     const fd = new FormData(e.currentTarget);
-    await createContract({
-      employeeId,
-      contractType: contractType as "PERMANENT" | "FIXED_TERM" | "PART_TIME" | "INTERN" | "CONSULTANT",
-      startDate: fd.get("startDate") as string,
-      endDate: fd.get("endDate") as string || undefined,
-      basicSalary: parseFloat(fd.get("basicSalary") as string),
-      allowances: parseFloat(fd.get("allowances") as string || "0"),
-      workingHours: parseFloat(fd.get("workingHours") as string || "8"),
-      notes: fd.get("notes") as string || undefined,
-    });
-    setLoading(false);
-    setOpen(false);
-    router.refresh();
+    try {
+      await createContract({
+        employeeId,
+        contractType: contractType as "PERMANENT" | "FIXED_TERM" | "PART_TIME" | "INTERN" | "CONSULTANT",
+        startDate: fd.get("startDate") as string,
+        endDate: fd.get("endDate") as string || undefined,
+        basicSalary: parseFloat(fd.get("basicSalary") as string),
+        allowances: parseFloat(fd.get("allowances") as string || "0"),
+        workingHours: parseFloat(fd.get("workingHours") as string || "8"),
+        notes: fd.get("notes") as string || undefined,
+      });
+      setOpen(false);
+      router.refresh();
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

@@ -14,20 +14,23 @@ export function BillPaymentForm({ billId, amountDue }: Props) {
   const [loading, setLoading] = useState(false);
   const [method, setMethod] = useState("CASH");
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     const form = e.currentTarget;
     const data = new FormData(form);
-    await recordBillPayment({
-      billId,
-      amount: parseFloat(data.get("amount") as string),
-      method: method as "CASH" | "BANK_TRANSFER" | "MOBILE_MONEY" | "CHECK" | "CREDIT",
-      reference: data.get("reference") as string || undefined,
-      paidAt: data.get("paidAt") as string || undefined,
-      notes: data.get("notes") as string || undefined,
-    });
-    setLoading(false);
+    try {
+      await recordBillPayment({
+        billId,
+        amount: parseFloat(data.get("amount") as string),
+        method: method as "CASH" | "BANK_TRANSFER" | "MOBILE_MONEY" | "CHECK" | "CREDIT",
+        reference: data.get("reference") as string || undefined,
+        paidAt: data.get("paidAt") as string || undefined,
+        notes: data.get("notes") as string || undefined,
+      });
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

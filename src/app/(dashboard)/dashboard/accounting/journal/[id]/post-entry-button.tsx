@@ -12,9 +12,12 @@ export function PostEntryButton({ entryId }: { entryId: string }) {
 
   async function handlePost() {
     setLoading(true);
-    await postJournalEntry(entryId);
-    setLoading(false);
-    router.refresh();
+    try {
+      await postJournalEntry(entryId);
+      router.refresh();
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

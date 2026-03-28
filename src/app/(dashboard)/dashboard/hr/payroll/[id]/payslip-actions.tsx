@@ -12,16 +12,22 @@ export function PayslipActions({ payslipId, status }: { payslipId: string; statu
 
   async function handleConfirm() {
     setLoading(true);
-    await confirmPayslip(payslipId);
-    setLoading(false);
-    router.refresh();
+    try {
+      await confirmPayslip(payslipId);
+      router.refresh();
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handlePay() {
     setLoading(true);
-    await markPayslipPaid(payslipId);
-    setLoading(false);
-    router.refresh();
+    try {
+      await markPayslipPaid(payslipId);
+      router.refresh();
+    } finally {
+      setLoading(false);
+    }
   }
 
   if (status === "PAID") return null;
