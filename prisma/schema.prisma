@@ -717,3 +717,145 @@ enum TaxType {
   II         // Imposto Industrial
   IS         // Imposto de Selo
 }
+
+// ─── HR Models ────────────────────────────────────────────────────────────────
+
+model Department {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  companyId   String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  employees   Employee[]
+}
+
+model Employee {
+  id            String         @id @default(cuid())
+  employeeNumber String        @unique
+  firstName     String
+  lastName      String
+  email         String?
+  phone         String?
+  nif           String?        // Angola tax ID
+  inssNumber    String?        // Social security number
+  dateOfBirth   DateTime?
+  hireDate      DateTime
+  endDate       DateTime?
+  status        EmployeeStatus @default(ACTIVE)
+  jobTitle      String?
+  departmentId  String?
+  department    Department?    @relation(fields: [departmentId], references: [id])
+  companyId     String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  contracts     Contract[]
+  attendances   Attendance[]
+  payslips      Payslip[]
+}
+
+model Contract {
+  id            String         @id @default(cuid())
+  employeeId    String
+  employee      Employee       @relation(fields: [employeeId], references: [id])
+  contractType  ContractType   @default(PERMANENT)
+  startDate     DateTime
+  endDate       DateTime?
+  basicSalary   Float          // Base salary in AOA
+  allowances    Float          @default(0)   // Transport, food, etc.
+  currency      String         @default("AOA")
+  workingHours  Float          @default(8)   // per day
+  status        ContractStatus @default(ACTIVE)
+  notes         String?
+  companyId     String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model Attendance {
+  id          String    @id @default(cuid())
+  employeeId  String
+  employee    Employee  @relation(fields: [employeeId], references: [id])
+  date        DateTime
+  checkIn     DateTime?
+  checkOut    DateTime?
+  hoursWorked Float     @default(0)
+  status      AttendanceStatus @default(PRESENT)
+  note        String?
+  companyId   String
+  createdAt   DateTime  @default(now())
+
+  @@unique([employeeId, date])
+}
+
+model Payslip {
+  id            String        @id @default(cuid())
+  number        String        // PS/2026/001
+  employeeId    String
+  employee      Employee      @relation(fields: [employeeId], references: [id])
+  period        String        // "2026-03"
+  basicSalary   Float
+  allowances    Float         @default(0)
+  grossSalary   Float
+  inssEmployee  Float         @default(0)   // 3% employee INSS
+  inssEmployer  Float         @default(0)   // 8% employer INSS
+  irtAmount     Float         @default(0)   // IRT tax
+  otherDeductions Float       @default(0)
+  netSalary     Float
+  status        PayslipStatus @default(DRAFT)
+  paidAt        DateTime?
+  companyId     String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  lines         PayslipLine[]
+}
+
+model PayslipLine {
+  id          String   @id @default(cuid())
+  payslipId   String
+  payslip     Payslip  @relation(fields: [payslipId], references: [id], onDelete: Cascade)
+  type        String   // "EARNING" | "DEDUCTION"
+  label       String
+  amount      Float
+  sequence    Int      @default(0)
+}
+
+// ─── HR Enums ─────────────────────────────────────────────────────────────────
+
+enum EmployeeStatus {
+  ACTIVE
+  ON_LEAVE
+  SUSPENDED
+  TERMINATED
+}
+
+enum ContractType {
+  PERMANENT
+  FIXED_TERM
+  PART_TIME
+  INTERN
+  CONSULTANT
+}
+
+enum ContractStatus {
+  ACTIVE
+  EXPIRED
+  TERMINATED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  HALF_DAY
+  ON_LEAVE
+  HOLIDAY
+}
+
+enum PayslipStatus {
+  DRAFT
+  CONFIRMED
+  PAID
+}
