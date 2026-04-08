@@ -97,10 +97,13 @@ model Contact {
   city      String?
   country   String      @default("Angola")
   taxId     String?     // NIF
+  whatsapp  String?     // WhatsApp phone number (with country code, e.g. +244912345678)
   notes     String?
-  type      ContactType @default(CUSTOMER)
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  type            ContactType @default(CUSTOMER)
+  creditLimit     Float       @default(0)   // 0 = no limit
+  creditTermsDays Int         @default(30)  // payment terms in days
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 
   companyId String
 
@@ -108,6 +111,8 @@ model Contact {
   invoices        Invoice[]
   purchaseOrders  PurchaseOrder[]
   supplierBills   SupplierBill[]
+  posOrders       PosOrder[]     @relation("PosOrderCustomer")
+  serviceOrders   ServiceOrder[] @relation("ServiceOrderCustomer")
 }
 
 // ─── Inventory: Units of Measure ─────────────────────────────────────────────
@@ -210,6 +215,8 @@ model Product {
   invoiceLines    InvoiceLine[]
   purchaseLines   PurchaseOrderLine[]
   billLines       SupplierBillLine[]
+  posLines        PosOrderLine[]     @relation("PosLineProduct")
+  serviceParts    ServicePart[]      @relation("ServicePartProduct")
 }
 
 // ─── Inventory: Product Variants ─────────────────────────────────────────────
@@ -366,6 +373,8 @@ model SalesOrderLine {
   subtotal      Float       @default(0)
   total         Float       @default(0)
   sequence      Int         @default(0)
+  analyticAccountId String?
+  analyticAccount   AnalyticAccount? @relation("SalesLineAnalytic", fields: [analyticAccountId], references: [id])
 }
 
 // ─── Invoices ─────────────────────────────────────────────────────────────────
@@ -412,6 +421,8 @@ model InvoiceLine {
   subtotal    Float    @default(0)
   total       Float    @default(0)
   sequence    Int      @default(0)
+  analyticAccountId String?
+  analyticAccount   AnalyticAccount? @relation("InvoiceLineAnalytic", fields: [analyticAccountId], references: [id])
 }
 
 // ─── Payments ────────────────────────────────────────────────────────────────
@@ -542,6 +553,8 @@ model PurchaseOrderLine {
   total         Float         @default(0)
   qtyReceived   Float         @default(0)
   sequence      Int           @default(0)
+  analyticAccountId String?
+  analyticAccount   AnalyticAccount? @relation("POLineAnalytic", fields: [analyticAccountId], references: [id])
 }
 
 // ─── Supplier Bills ───────────────────────────────────────────────────────────
@@ -586,6 +599,8 @@ model SupplierBillLine {
   subtotal    Float        @default(0)
   total       Float        @default(0)
   sequence    Int          @default(0)
+  analyticAccountId String?
+  analyticAccount   AnalyticAccount? @relation("BillLineAnalytic", fields: [analyticAccountId], references: [id])
 }
 
 model BillPayment {
@@ -732,9 +747,13 @@ model AnalyticAccount {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  projects    Project[]
-  journalLines JournalEntryLine[]
-  expenses    ProjectExpense[]
+  projects           Project[]
+  journalLines       JournalEntryLine[]
+  expenses           ProjectExpense[]
+  salesOrderLines    SalesOrderLine[]   @relation("SalesLineAnalytic")
+  invoiceLines       InvoiceLine[]      @relation("InvoiceLineAnalytic")
+  purchaseOrderLines PurchaseOrderLine[] @relation("POLineAnalytic")
+  supplierBillLines  SupplierBillLine[] @relation("BillLineAnalytic")
 }
 
 model Project {
@@ -890,6 +909,7 @@ model Employee {
   attendances   Attendance[]
   payslips      Payslip[]
   timesheets    Timesheet[]
+  serviceOrders ServiceOrder[] @relation("ServiceTechnician")
 }
 
 model Contract {
@@ -994,4 +1014,267 @@ enum PayslipStatus {
   DRAFT
   CONFIRMED
   PAID
+}
+
+// ─── POS ─────────────────────────────────────────────────────────────────────
+
+enum PosSessionStatus {
+  OPEN
+  CLOSED
+}
+
+enum PosOrderStatus {
+  PAID
+  REFUNDED
+  CANCELLED
+}
+
+model PosConfig {
+  id             String       @id @default(cuid())
+  name           String       // e.g. "Main Counter", "Warehouse", "Express Lane"
+  description    String?
+  isActive       Boolean      @default(true)
+  defaultTaxRate Float        @default(14)
+  allowDiscount  Boolean      @default(false)
+  sessions       PosSession[]
+  companyId      String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model PosSession {
+  id          String           @id @default(cuid())
+  number      String
+  configId    String
+  config      PosConfig        @relation(fields: [configId], references: [id])
+  status      PosSessionStatus @default(OPEN)
+  openedAt    DateTime         @default(now())
+  closedAt    DateTime?
+  openingCash Float            @default(0)
+  closingCash Float?
+  cashSales   Float            @default(0)
+  notes       String?
+  orders      PosOrder[]
+  companyId   String
+  createdAt   DateTime         @default(now())
+}
+
+model PosOrder {
+  id             String         @id @default(cuid())
+  number         String
+  sessionId      String
+  session        PosSession     @relation(fields: [sessionId], references: [id])
+  status         PosOrderStatus @default(PAID)
+  lines          PosOrderLine[]
+  subtotal       Float          @default(0)
+  taxAmount      Float          @default(0)
+  total          Float          @default(0)
+  paymentMethod  PaymentMethod  @default(CASH)
+  amountReceived Float          @default(0)
+  change         Float          @default(0)
+  customerId     String?
+  customer       Contact?       @relation("PosOrderCustomer", fields: [customerId], references: [id])
+  notes          String?
+  companyId      String
+  createdAt      DateTime       @default(now())
+}
+
+model PosOrderLine {
+  id          String    @id @default(cuid())
+  orderId     String
+  order       PosOrder  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product   @relation("PosLineProduct", fields: [productId], references: [id])
+  description String?
+  quantity    Float
+  unitPrice   Float
+  taxRate     Float     @default(14)
+  subtotal    Float     @default(0)
+  total       Float     @default(0)
+}
+
+// ─── Field Service ────────────────────────────────────────────────────────────
+
+enum ServiceOrderStatus {
+  DRAFT
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum ServicePriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+model WorksheetTemplate {
+  id        String         @id @default(cuid())
+  name      String
+  fields    Json           // [{ id, label, type: text|textarea|number|checkbox|select, required, options? }]
+  companyId String
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  orders    ServiceOrder[]
+}
+
+model ServiceOrder {
+  id            String             @id @default(cuid())
+  number        String
+  title         String
+  description   String?
+  status        ServiceOrderStatus @default(DRAFT)
+  priority      ServicePriority    @default(NORMAL)
+  customerId    String
+  customer      Contact            @relation("ServiceOrderCustomer", fields: [customerId], references: [id])
+  technicianId  String?
+  technician    Employee?          @relation("ServiceTechnician", fields: [technicianId], references: [id])
+  scheduledAt   DateTime?
+  startedAt     DateTime?
+  completedAt   DateTime?
+  address       String?
+  latitude      Float?
+  longitude     Float?
+  worksheetId   String?
+  worksheet     WorksheetTemplate? @relation(fields: [worksheetId], references: [id])
+  worksheetData Json?
+  signature     String?
+  notes         String?
+  parts         ServicePart[]
+  companyId     String
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+}
+
+model ServicePart {
+  id        String       @id @default(cuid())
+  orderId   String
+  order     ServiceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product      @relation("ServicePartProduct", fields: [productId], references: [id])
+  quantity  Float
+  unitCost  Float        @default(0)
+}
+
+// ─── Payment Providers ───────────────────────────────────────────────────────
+
+model PaymentConfig {
+  id            String   @id @default(cuid())
+  provider      String   // FLUTTERWAVE | PAYSTACK | DPO | MULTICAIXA
+  publicKey     String?
+  secretKey     String
+  webhookSecret String?
+  isActive      Boolean  @default(false)
+  currency      String   @default("USD") // preferred charge currency for this provider
+  companyId     String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  links         PaymentLink[]
+
+  @@unique([provider, companyId])
+}
+
+model PaymentLink {
+  id          String    @id @default(cuid())
+  invoiceId   String
+  provider    String
+  configId    String
+  config      PaymentConfig @relation(fields: [configId], references: [id])
+  linkUrl     String
+  txRef       String    @unique
+  amount      Float
+  currency    String
+  status      String    @default("PENDING") // PENDING | PAID | FAILED
+  paidAt      DateTime?
+  companyId   String
+  createdAt   DateTime  @default(now())
+}
+
+// ─── Multi-Currency: Exchange Rates ──────────────────────────────────────────
+
+model ExchangeRate {
+  id           String   @id @default(cuid())
+  fromCurrency String   // e.g. "USD", "EUR"
+  toCurrency   String   // always the company's base currency e.g. "AOA"
+  rate         Float    // how many toCurrency units = 1 fromCurrency unit
+  effectiveDate DateTime @default(now())
+  companyId    String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([fromCurrency, toCurrency, companyId])   // latest rate per pair
+}
+
+// ─── CRM ─────────────────────────────────────────────────────────────────────
+
+enum LeadSource {
+  FACEBOOK
+  INSTAGRAM
+  LINKEDIN
+  TIKTOK
+  YOUTUBE
+  WHATSAPP
+  WEBSITE
+  REFERRAL
+  MANUAL
+  OTHER
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  PROPOSAL
+  WON
+  LOST
+}
+
+model Lead {
+  id             String      @id @default(cuid())
+  name           String
+  email          String?
+  phone          String?
+  whatsapp       String?
+  company        String?
+  jobTitle       String?
+  source         LeadSource  @default(MANUAL)
+  status         LeadStatus  @default(NEW)
+  expectedValue  Float?
+  notes          String?
+  assignedToId   String?     // User.id
+  convertedToId  String?     // Contact.id once converted
+  companyId      String
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  activities     LeadActivity[]
+}
+
+model LeadActivity {
+  id        String   @id @default(cuid())
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  type      String   // NOTE | CALL | EMAIL | WHATSAPP | MEETING
+  body      String
+  companyId String
+  createdAt DateTime @default(now())
+}
+
+// ─── WhatsApp Log ────────────────────────────────────────────────────────────
+
+model WhatsappLog {
+  id          String   @id @default(cuid())
+  to          String   // phone number
+  type        String   // INVOICE | QUOTATION | CUSTOM
+  referenceId String   // invoice/SO id
+  reference   String   // display number e.g. FT/2026/001
+  body        String
+  status      String   @default("SENT") // SENT | FAILED
+  twilioSid   String?
+  companyId   String
+  sentAt      DateTime @default(now())
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ const schema = z.object({
 
 interface Supplier { id: string; name: string }
 interface Product { id: string; name: string; internalRef?: string | null; costPrice: number }
+interface AnalyticAccount { id: string; code: string; name: string }
 
 interface Props {
   defaultValues?: Partial<PurchaseOrderFormData>;
@@ -36,11 +37,12 @@ interface Props {
   submitLabel?: string;
   suppliers: Supplier[];
   products: Product[];
+  analyticAccounts?: AnalyticAccount[];
 }
 
-export function PurchaseOrderForm({ defaultValues, onSubmit, submitLabel = "Save", suppliers, products }: Props) {
+export function PurchaseOrderForm({ defaultValues, onSubmit, submitLabel = "Save", suppliers, products, analyticAccounts = [] }: Props) {
   const { register, handleSubmit, setValue, watch, control, formState: { errors, isSubmitting } } = useForm<PurchaseOrderFormData>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as Resolver<PurchaseOrderFormData>,
     defaultValues: {
       orderDate: new Date().toISOString().split("T")[0],
       lines: [{ productId: "", quantity: 1, unitPrice: 0, taxRate: 14, sequence: 0 }],
@@ -109,38 +111,61 @@ export function PurchaseOrderForm({ defaultValues, onSubmit, submitLabel = "Save
         </div>
 
         {fields.map((field, idx) => (
-          <div key={field.id} className="grid grid-cols-12 gap-2 items-start p-3 border rounded-md">
-            <div className="col-span-12 sm:col-span-4">
-              <Select value={watch(`lines.${idx}.productId`)} onValueChange={(v) => handleProductSelect(idx, v)}>
-                <SelectTrigger><SelectValue placeholder="Select product" /></SelectTrigger>
-                <SelectContent>
-                  {products.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.name}{p.internalRef ? ` [${p.internalRef}]` : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <div key={field.id} className="space-y-2 p-3 border rounded-md">
+            <div className="grid grid-cols-12 gap-2 items-start">
+              <div className="col-span-12 sm:col-span-4">
+                <Select value={watch(`lines.${idx}.productId`)} onValueChange={(v) => handleProductSelect(idx, v)}>
+                  <SelectTrigger><SelectValue placeholder="Select product" /></SelectTrigger>
+                  <SelectContent>
+                    {products.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.name}{p.internalRef ? ` [${p.internalRef}]` : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="col-span-8 sm:col-span-2">
+                <Input {...register(`lines.${idx}.description`)} placeholder="Description" />
+              </div>
+              <div className="col-span-4 sm:col-span-2">
+                <Input type="number" step="0.01" min="0" {...register(`lines.${idx}.quantity`)} />
+              </div>
+              <div className="col-span-4 sm:col-span-2">
+                <Input type="number" step="0.01" min="0" {...register(`lines.${idx}.unitPrice`)} />
+              </div>
+              <div className="col-span-2 sm:col-span-1">
+                <Input type="number" step="0.1" min="0" {...register(`lines.${idx}.taxRate`)} />
+              </div>
+              <div className="col-span-2 sm:col-span-1 flex justify-end">
+                {fields.length > 1 && (
+                  <Button type="button" variant="ghost" size="sm" onClick={() => remove(idx)} className="text-destructive hover:text-destructive">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             </div>
-            <div className="col-span-8 sm:col-span-2">
-              <Input {...register(`lines.${idx}.description`)} placeholder="Description" />
-            </div>
-            <div className="col-span-4 sm:col-span-2">
-              <Input type="number" step="0.01" min="0" {...register(`lines.${idx}.quantity`)} />
-            </div>
-            <div className="col-span-4 sm:col-span-2">
-              <Input type="number" step="0.01" min="0" {...register(`lines.${idx}.unitPrice`)} />
-            </div>
-            <div className="col-span-2 sm:col-span-1">
-              <Input type="number" step="0.1" min="0" {...register(`lines.${idx}.taxRate`)} />
-            </div>
-            <div className="col-span-2 sm:col-span-1 flex justify-end">
-              {fields.length > 1 && (
-                <Button type="button" variant="ghost" size="sm" onClick={() => remove(idx)} className="text-destructive hover:text-destructive">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
+            {analyticAccounts.length > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground shrink-0">Analytic Account:</span>
+                <Select
+                  value={watch(`lines.${idx}.analyticAccountId`) || "__none__"}
+                  onValueChange={(v) => setValue(`lines.${idx}.analyticAccountId`, v === "__none__" ? "" : v)}
+                >
+                  <SelectTrigger className="h-7 text-xs w-64">
+                    <SelectValue placeholder="— None —" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">— None —</SelectItem>
+                    {analyticAccounts.map((a) => (
+                      <SelectItem key={a.id} value={a.id} className="text-xs">
+                        {a.code} · {a.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
         ))}
       </div>

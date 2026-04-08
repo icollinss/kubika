@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getInvoice, confirmInvoice, recordPayment } from "@/lib/actions/sales";
+import { getInvoice, confirmInvoice } from "@/lib/actions/sales";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChevronLeft, CheckCircle, Printer } from "lucide-react";
 import { PaymentForm } from "./payment-form";
+import { WhatsappInvoiceButton } from "./whatsapp-invoice-button";
+import { RequestPaymentButton } from "./request-payment-button";
 
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
   DRAFT:      { label: "Draft",     variant: "outline" },
@@ -34,7 +36,6 @@ export default async function InvoiceDetailPage({ params }: Props) {
   const cfg = statusConfig[invoice.status];
   const canConfirm = invoice.status === "DRAFT";
   const canPay = invoice.status === "CONFIRMED" || invoice.status === "PARTIAL" || invoice.status === "OVERDUE";
-  const record = recordPayment;
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -51,11 +52,13 @@ export default async function InvoiceDetailPage({ params }: Props) {
             </div>
             <p className="text-sm text-muted-foreground">
               {invoice.customer.name}
-              {invoice.order && <> · <Link href={`/dashboard/sales/orders/${invoice.order?.id ?? ""}`} className="hover:underline">{invoice.order.number}</Link></>}
+              {invoice.orderId && invoice.order && <> · <Link href={`/dashboard/sales/orders/${invoice.orderId}`} className="hover:underline">{invoice.order.number}</Link></>}
             </p>
           </div>
         </div>
         <div className="flex gap-2">
+          <WhatsappInvoiceButton invoiceId={id} defaultPhone={invoice.customer.phone ?? ""} />
+          {canPay && <RequestPaymentButton invoiceId={id} />}
           <Button variant="outline" size="sm" onClick={() => window.print()}>
             <Printer className="h-4 w-4 mr-2" />Print
           </Button>

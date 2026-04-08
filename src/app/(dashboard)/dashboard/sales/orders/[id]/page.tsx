@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getSalesOrder, confirmOrder, cancelOrder, createInvoiceFromOrder, updateSalesOrder } from "@/lib/actions/sales";
 import { getContacts } from "@/lib/actions/contacts";
 import { getProducts } from "@/lib/actions/inventory";
+import { getAnalyticAccounts } from "@/lib/actions/projects";
 import { SalesOrderForm } from "@/components/sales/sales-order-form";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChevronLeft, FileText, CheckCircle, XCircle } from "lucide-react";
+import { WhatsappQuotationButton } from "./whatsapp-quotation-button";
 
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
   QUOTATION:  { label: "Quotation",  variant: "outline" },
@@ -32,10 +34,11 @@ interface Props { params: Promise<{ id: string }> }
 
 export default async function SalesOrderDetailPage({ params }: Props) {
   const { id } = await params;
-  const [order, contacts, products] = await Promise.all([
+  const [order, contacts, products, analyticAccounts] = await Promise.all([
     getSalesOrder(id),
     getContacts(undefined, "CUSTOMER"),
     getProducts(),
+    getAnalyticAccounts(),
   ]);
   if (!order) notFound();
 
@@ -64,6 +67,7 @@ export default async function SalesOrderDetailPage({ params }: Props) {
           </div>
         </div>
         <div className="flex gap-2 flex-wrap">
+          <WhatsappQuotationButton orderId={id} defaultPhone={order.customer.phone ?? ""} />
           {canCancel && (
             <form action={cancelOrder.bind(null, id)}>
               <Button variant="outline" size="sm" type="submit">
@@ -179,6 +183,7 @@ export default async function SalesOrderDetailPage({ params }: Props) {
                   submitLabel="Save Changes"
                   customers={customers}
                   products={products}
+                  analyticAccounts={analyticAccounts}
                 />
               </CardContent>
             </Card>

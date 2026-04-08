@@ -6,6 +6,7 @@ import {
 } from "@/lib/actions/purchasing";
 import { getContacts } from "@/lib/actions/contacts";
 import { getProducts } from "@/lib/actions/inventory";
+import { getAnalyticAccounts } from "@/lib/actions/projects";
 import { PurchaseOrderForm } from "@/components/purchasing/purchase-order-form";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,10 +36,11 @@ interface Props { params: Promise<{ id: string }> }
 
 export default async function PurchaseOrderDetailPage({ params }: Props) {
   const { id } = await params;
-  const [order, contacts, products] = await Promise.all([
+  const [order, contacts, products, analyticAccounts] = await Promise.all([
     getPurchaseOrder(id),
     getContacts(),
     getProducts(),
+    getAnalyticAccounts(),
   ]);
   if (!order) notFound();
 
@@ -163,6 +165,7 @@ export default async function PurchaseOrderDetailPage({ params }: Props) {
                   submitLabel="Save Changes"
                   suppliers={suppliers}
                   products={products}
+                  analyticAccounts={analyticAccounts}
                 />
               </CardContent>
             </Card>

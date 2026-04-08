@@ -58,6 +58,7 @@ const lineSchema = z.object({
   discount: z.coerce.number().min(0).max(100).default(0),
   taxRate: z.coerce.number().min(0).default(14),
   sequence: z.coerce.number().default(0),
+  analyticAccountId: z.string().optional(),
 });
 
 const orderSchema = z.object({

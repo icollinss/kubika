@@ -54,6 +54,7 @@ const lineSchema = z.object({
   unitPrice: z.coerce.number().min(0),
   taxRate: z.coerce.number().min(0).default(14),
   sequence: z.coerce.number().default(0),
+  analyticAccountId: z.string().optional(),
 });
 
 const poSchema = z.object({

@@ -11,6 +11,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
+import Link from "next/link";
+import { useLanguage } from "@/contexts/language-context";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -21,6 +24,7 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [error, setError] = useState<string | null>(null);
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginForm>({
@@ -36,31 +40,36 @@ export default function LoginPage() {
     });
 
     if (result?.error) {
-      setError("Invalid email or password.");
+      setError(t.auth.invalidCredentials);
       return;
     }
 
     router.push("/dashboard");
   };
 
+  const a = t.auth;
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/40 px-4">
       <div className="w-full max-w-md space-y-6">
-        {/* Logo + Brand */}
-        <div className="text-center space-y-1">
+        {/* Language switcher + Brand */}
+        <div className="text-center space-y-2">
+          <div className="flex justify-center">
+            <LanguageSwitcher />
+          </div>
           <h1 className="text-3xl font-bold tracking-tight">Kubika</h1>
           <p className="text-muted-foreground text-sm">Business Intelligence for Africa</p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Sign in</CardTitle>
-            <CardDescription>Enter your credentials to access your account</CardDescription>
+            <CardTitle>{a.welcomeBack}</CardTitle>
+            <CardDescription>{a.enterCredentials}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{a.email}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -73,7 +82,7 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{a.password}</Label>
                 <Input
                   id="password"
                   type="password"
@@ -93,15 +102,20 @@ export default function LoginPage() {
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
+                    {a.signingIn}
                   </>
                 ) : (
-                  "Sign in"
+                  a.signIn
                 )}
               </Button>
             </form>
           </CardContent>
         </Card>
+
+        <p className="text-center text-sm text-muted-foreground">
+          {a.noAccount}{" "}
+          <Link href="/register" className="underline hover:text-foreground">{a.startTrial}</Link>
+        </p>
       </div>
     </div>
   );

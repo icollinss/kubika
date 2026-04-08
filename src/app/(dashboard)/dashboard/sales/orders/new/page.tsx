@@ -2,15 +2,17 @@ import Link from "next/link";
 import { createSalesOrder } from "@/lib/actions/sales";
 import { getContacts } from "@/lib/actions/contacts";
 import { getProducts } from "@/lib/actions/inventory";
+import { getAnalyticAccounts } from "@/lib/actions/projects";
 import { SalesOrderForm } from "@/components/sales/sales-order-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronLeft } from "lucide-react";
 
 export default async function NewSalesOrderPage() {
-  const [contacts, products] = await Promise.all([
+  const [contacts, products, analyticAccounts] = await Promise.all([
     getContacts(undefined, "CUSTOMER"),
     getProducts(),
+    getAnalyticAccounts(),
   ]);
 
   const customers = contacts.filter((c) => c.type === "CUSTOMER" || c.type === "BOTH");
@@ -31,6 +33,7 @@ export default async function NewSalesOrderPage() {
             submitLabel="Save Quotation"
             customers={customers}
             products={products}
+            analyticAccounts={analyticAccounts}
           />
         </CardContent>
       </Card>
