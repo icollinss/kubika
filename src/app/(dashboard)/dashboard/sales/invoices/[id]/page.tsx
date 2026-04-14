@@ -11,6 +11,8 @@ import { ChevronLeft, CheckCircle, Printer } from "lucide-react";
 import { PaymentForm } from "./payment-form";
 import { WhatsappInvoiceButton } from "./whatsapp-invoice-button";
 import { RequestPaymentButton } from "./request-payment-button";
+import { PayPayPanel } from "./paypay-panel";
+import { getInvoicePaymentReferences } from "@/lib/actions/paypay";
 
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "outline" | "destructive" }> = {
   DRAFT:      { label: "Draft",     variant: "outline" },
@@ -30,7 +32,10 @@ interface Props { params: Promise<{ id: string }> }
 
 export default async function InvoiceDetailPage({ params }: Props) {
   const { id } = await params;
-  const invoice = await getInvoice(id);
+  const [invoice, paymentRefs] = await Promise.all([
+    getInvoice(id),
+    getInvoicePaymentReferences(id),
+  ]);
   if (!invoice) notFound();
 
   const cfg = statusConfig[invoice.status];
@@ -88,6 +93,15 @@ export default async function InvoiceDetailPage({ params }: Props) {
           </Card>
         ))}
       </div>
+
+      {/* PayPay / MCX Express panel */}
+      {canPay && (
+        <PayPayPanel
+          invoiceId={id}
+          amountDue={invoice.amountDue}
+          existingRefs={paymentRefs}
+        />
+      )}
 
       <Tabs defaultValue="lines">
         <TabsList>

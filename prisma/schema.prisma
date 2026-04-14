@@ -403,8 +403,28 @@ model Invoice {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
-  lines         InvoiceLine[]
-  payments      Payment[]
+  lines              InvoiceLine[]
+  payments           Payment[]
+  paymentReferences  PaymentReference[]
+}
+
+model PaymentReference {
+  id          String    @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice   @relation(fields: [invoiceId], references: [id])
+  requestNo   String    @unique            // our unique tx ID sent to PayPay
+  method      String                       // MCX | PAYPAY_APP | BANK_REF
+  entity      String?                      // Multicaixa entity number
+  reference   String?                      // Multicaixa reference number
+  payUrl      String?                      // PayPay App deep-link / QR URL
+  amount      Float
+  currency    String    @default("AOA")
+  status      String    @default("PENDING") // PENDING | PAID | EXPIRED | CANCELLED
+  expiresAt   DateTime?
+  paidAt      DateTime?
+  providerRef String?                       // PayPay transaction ID on confirmation
+  companyId   String
+  createdAt   DateTime  @default(now())
 }
 
 model InvoiceLine {

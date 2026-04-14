@@ -1,5 +1,5 @@
 import { getPaymentConfigs } from "@/lib/actions/payment-providers";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PaymentProviderCard } from "./payment-provider-card";
 
@@ -36,17 +36,17 @@ const PROVIDERS = [
     secretKeyLabel: "Company Token",
   },
   {
-    key: "MULTICAIXA",
-    name: "Multicaixa Express",
-    description: "Angola's leading mobile payment network. Direct integration via BFA/BAI APIs.",
-    logo: "📱",
+    key: "PAYPAY",
+    name: "PayPay Africa (Multicaixa Express)",
+    description: "Aceite pagamentos via Multicaixa Express, PayPay App e referências bancárias. Solução angolana líder para e-commerce.",
+    logo: "🇦🇴",
     countries: ["AO"],
     currencies: ["AOA"],
-    docsUrl: "https://multicaixa.ao",
-    fields: ["publicKey", "secretKey"],
-    publicKeyLabel: "Merchant ID",
-    secretKeyLabel: "API Key",
-    comingSoon: true,
+    docsUrl: "https://paypayafrica.com",
+    fields: ["publicKey", "secretKey", "webhookSecret"],
+    publicKeyLabel: "Partner ID",
+    secretKeyLabel: "Chave RSA Privada (PEM em base64)",
+    webhookSecretLabel: "Chave Pública PayPay (PEM em base64)",
   },
 ];
 
@@ -82,6 +82,10 @@ export default async function PaymentSettingsPage() {
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="text-xs font-mono shrink-0">Paystack</Badge>
               <code className="text-xs text-muted-foreground">{webhookBase}/api/webhooks/paystack</code>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-xs font-mono shrink-0">PayPay Africa</Badge>
+              <code className="text-xs text-muted-foreground">{webhookBase}/api/webhooks/paypay</code>
             </div>
           </div>
         </CardContent>
