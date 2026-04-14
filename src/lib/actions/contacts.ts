@@ -92,5 +92,37 @@ export async function getContact(id: string) {
   const companyId = await getCompanyId();
   return prisma.contact.findUnique({
     where: { id, companyId },
+    include: {
+      salesOrders: {
+        orderBy: { createdAt: "desc" },
+        select: { id: true, number: true, status: true, total: true, createdAt: true },
+      },
+      invoices: {
+        orderBy: { invoiceDate: "desc" },
+        select: { id: true, number: true, status: true, total: true, amountDue: true, invoiceDate: true, dueDate: true },
+      },
+      purchaseOrders: {
+        orderBy: { createdAt: "desc" },
+        select: { id: true, number: true, status: true, total: true, createdAt: true },
+      },
+      supplierBills: {
+        orderBy: { billDate: "desc" },
+        select: { id: true, number: true, status: true, total: true, amountDue: true, billDate: true },
+      },
+      serviceOrders: {
+        orderBy: { createdAt: "desc" },
+        select: { id: true, number: true, status: true, createdAt: true },
+      },
+    },
   });
+}
+
+export async function addContactNote(id: string, note: string) {
+  const companyId = await getCompanyId();
+  const contact = await prisma.contact.findFirstOrThrow({ where: { id, companyId } });
+  await prisma.contact.update({
+    where: { id },
+    data: { notes: contact.notes ? `${contact.notes}\n\n${note}` : note },
+  });
+  revalidatePath(`/dashboard/contacts/${id}`);
 }
