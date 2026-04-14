@@ -118,15 +118,22 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="flex flex-col w-64 min-h-screen bg-card border-r">
+    <aside className="flex flex-col w-64 min-h-screen bg-sidebar border-r border-sidebar-border">
       {/* Brand */}
-      <div className="px-6 py-5 border-b">
-        <h1 className="text-xl font-bold tracking-tight">Kubika</h1>
-        <p className="text-xs text-muted-foreground mt-0.5">Business Platform</p>
+      <div className="px-6 py-5 border-b border-sidebar-border">
+        <div className="flex items-center gap-2.5">
+          <div className="h-7 w-7 rounded-lg bg-sidebar-primary flex items-center justify-center">
+            <span className="text-xs font-bold text-sidebar-primary-foreground">K</span>
+          </div>
+          <div>
+            <h1 className="text-sm font-bold text-sidebar-foreground tracking-tight">Kubika</h1>
+            <p className="text-[10px] text-sidebar-foreground/50 leading-none mt-0.5">Business Platform</p>
+          </div>
+        </div>
       </div>
 
       {/* Main nav */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
         {navItems.map((item) => {
           if ("children" in item) {
             const group = item as Group;
@@ -139,7 +146,9 @@ export function Sidebar() {
                   onClick={toggle}
                   className={cn(
                     "w-full flex items-center justify-between gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                    isActive ? "text-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    isActive
+                      ? "text-sidebar-foreground"
+                      : "text-sidebar-foreground/55 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                   )}
                 >
                   <span className="flex items-center gap-3">
@@ -149,7 +158,7 @@ export function Sidebar() {
                   {isOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
                 </button>
                 {isOpen && (
-                  <div className="ml-4 mt-1 space-y-1 border-l pl-3">
+                  <div className="ml-4 mt-0.5 space-y-0.5 border-l border-sidebar-border/50 pl-3">
                     {group.children.map(({ href, label, icon: Icon }) => (
                       <Link
                         key={href}
@@ -157,8 +166,8 @@ export function Sidebar() {
                         className={cn(
                           "flex items-center gap-3 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
                           pathname === href || pathname.startsWith(href + "/")
-                            ? "bg-primary text-primary-foreground"
-                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                            ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                            : "text-sidebar-foreground/55 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                         )}
                       >
                         <Icon className="h-3.5 w-3.5 shrink-0" />
@@ -179,8 +188,8 @@ export function Sidebar() {
               className={cn(
                 "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
                 pathname === leaf.href
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                  : "text-sidebar-foreground/55 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               )}
             >
               <leaf.icon className="h-4 w-4 shrink-0" />
@@ -191,12 +200,12 @@ export function Sidebar() {
       </nav>
 
       {/* Language switcher */}
-      <div className="border-t px-1 py-2">
+      <div className="border-t border-sidebar-border px-1 py-2">
         <LanguageSwitcher />
       </div>
 
       {/* Bottom nav */}
-      <div className="px-3 pb-4 space-y-1">
+      <div className="px-3 pb-4 space-y-0.5">
         {bottomItems.map(({ href, label, icon: Icon }) => (
           <Link
             key={href}
@@ -204,8 +213,8 @@ export function Sidebar() {
             className={cn(
               "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
               pathname === href
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                : "text-sidebar-foreground/55 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             )}
           >
             <Icon className="h-4 w-4 shrink-0" />

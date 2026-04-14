@@ -23,13 +23,13 @@ export function Topbar({ userName, userEmail }: TopbarProps) {
     : "U";
 
   return (
-    <header className="h-14 border-b bg-card flex items-center justify-between px-6">
+    <header className="h-14 border-b bg-card flex items-center justify-between px-6 shadow-sm">
       <div />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button className="flex items-center gap-2 rounded-full focus:outline-none focus:ring-2 focus:ring-ring">
             <Avatar className="h-8 w-8">
-              <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+              <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">{initials}</AvatarFallback>
             </Avatar>
           </button>
         </DropdownMenuTrigger>
