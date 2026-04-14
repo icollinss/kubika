@@ -1,61 +1,250 @@
 // ─── Kubika i18n ─────────────────────────────────────────────────────────────
-// Supported locales: English (en) and French (fr)
+// Supported locales: Portuguese (pt), English (en), French (fr)
 
-export type Locale = "en" | "fr";
+export type Locale = "pt" | "en" | "fr";
 
 export const LOCALES: { code: Locale; label: string; flag: string }[] = [
-  { code: "en", label: "English", flag: "🇬🇧" },
-  { code: "fr", label: "Français", flag: "🇫🇷" },
+  { code: "pt", label: "Português", flag: "🇦🇴" },
+  { code: "en", label: "English",   flag: "🇬🇧" },
+  { code: "fr", label: "Français",  flag: "🇫🇷" },
 ];
 
-export const DEFAULT_LOCALE: Locale = "en";
+export const DEFAULT_LOCALE: Locale = "pt";
 export const LOCALE_COOKIE = "kubika_locale";
 
 // ─── Translation strings ──────────────────────────────────────────────────────
 
 const translations = {
-  en: {
+  pt: {
     // ── Nav ──────────────────────────────────────────────────────────────────
     nav: {
-      dashboard:     "Dashboard",
-      contacts:      "Contacts",
-      inventory:     "Inventory",
-      products:      "Products",
-      operations:    "Operations",
-      warehouses:    "Warehouses",
-      sales:         "Sales",
-      orders:        "Orders",
-      invoices:      "Invoices",
-      purchasing:    "Purchasing",
-      purchaseOrders:"Purchase Orders",
-      supplierBills: "Supplier Bills",
-      accounting:    "Accounting",
-      chartOfAccounts:"Chart of Accounts",
-      journalEntries:"Journal Entries",
-      profitLoss:    "Profit & Loss",
-      balanceSheet:  "Balance Sheet",
-      currencies:    "Currencies",
-      analyticAccounts: "Analytic Accounts",
-      hrPayroll:     "HR & Payroll",
-      employees:     "Employees",
-      payroll:       "Payroll",
-      projects:      "Projects",
-      crm:           "CRM",
-      pipeline:      "Pipeline",
-      allLeads:      "All Leads",
-      pointOfSale:   "Point of Sale",
-      fieldService:  "Field Service",
-      serviceOrders: "Service Orders",
-      worksheets:    "Worksheets",
-      statements:    "Statements",
-      importData:    "Import Data",
-      reports:       "Reports",
-      payments:      "Payments",
-      company:       "Company",
-      settings:      "Settings",
+      dashboard:        "Painel",
+      contacts:         "Contactos",
+      inventory:        "Inventário",
+      products:         "Produtos",
+      operations:       "Operações",
+      warehouses:       "Armazéns",
+      sales:            "Vendas",
+      orders:           "Encomendas",
+      invoices:         "Faturas",
+      purchasing:       "Compras",
+      purchaseOrders:   "Ordens de Compra",
+      supplierBills:    "Faturas de Fornecedor",
+      accounting:       "Contabilidade",
+      chartOfAccounts:  "Plano de Contas",
+      journalEntries:   "Lançamentos",
+      profitLoss:       "Resultados",
+      balanceSheet:     "Balanço",
+      currencies:       "Moedas",
+      analyticAccounts: "Contas Analíticas",
+      hrPayroll:        "RH & Salários",
+      employees:        "Colaboradores",
+      payroll:          "Salários",
+      projects:         "Projectos",
+      crm:              "CRM",
+      pipeline:         "Pipeline",
+      allLeads:         "Todos os Leads",
+      pointOfSale:      "Ponto de Venda",
+      fieldService:     "Serviço em Campo",
+      serviceOrders:    "Ordens de Serviço",
+      worksheets:       "Fichas de Trabalho",
+      statements:       "Extractos de Conta",
+      importData:       "Importar Dados",
+      reports:          "Relatórios",
+      payments:         "Pagamentos",
+      company:          "Empresa",
+      settings:         "Configurações",
     },
 
     // ── Common actions ────────────────────────────────────────────────────────
+    actions: {
+      save:        "Guardar",
+      cancel:      "Cancelar",
+      edit:        "Editar",
+      delete:      "Eliminar",
+      add:         "Adicionar",
+      create:      "Criar",
+      confirm:     "Confirmar",
+      back:        "Voltar",
+      next:        "Próximo",
+      submit:      "Submeter",
+      search:      "Pesquisar",
+      filter:      "Filtrar",
+      export:      "Exportar",
+      import:      "Importar",
+      print:       "Imprimir",
+      send:        "Enviar",
+      close:       "Fechar",
+      open:        "Abrir",
+      view:        "Ver",
+      refresh:     "Actualizar",
+      download:    "Descarregar",
+      upload:      "Carregar",
+    },
+
+    // ── Status labels ─────────────────────────────────────────────────────────
+    status: {
+      draft:       "Rascunho",
+      confirmed:   "Confirmado",
+      paid:        "Pago",
+      partial:     "Parcial",
+      overdue:     "Em Atraso",
+      cancelled:   "Cancelado",
+      delivered:   "Entregue",
+      pending:     "Pendente",
+      active:      "Activo",
+      inactive:    "Inactivo",
+      open:        "Aberto",
+      closed:      "Fechado",
+      new:         "Novo",
+      contacted:   "Contactado",
+      qualified:   "Qualificado",
+      proposal:    "Proposta",
+      won:         "Ganho",
+      lost:        "Perdido",
+    },
+
+    // ── Auth ──────────────────────────────────────────────────────────────────
+    auth: {
+      signIn:            "Entrar",
+      signOut:           "Sair",
+      welcomeBack:       "Bem-vindo de volta",
+      enterCredentials:  "Introduza as suas credenciais para aceder à sua conta",
+      email:             "E-mail",
+      password:          "Palavra-passe",
+      invalidCredentials:"E-mail ou palavra-passe inválidos.",
+      signingIn:         "A entrar...",
+      noAccount:         "Ainda não tem conta?",
+      startTrial:        "Começar gratuitamente",
+      register:          "Registar",
+    },
+
+    // ── Register ──────────────────────────────────────────────────────────────
+    register: {
+      title:            "Comece o seu período gratuito",
+      subtitle:         "Sem cartão de crédito",
+      yourCompany:      "A sua empresa",
+      companyInfo:      "Fale-nos sobre o seu negócio",
+      companyName:      "Nome da Empresa",
+      country:          "País",
+      currency:         "Moeda",
+      yourAccount:      "A sua conta",
+      adminAccount:     "Criar a conta de administrador para",
+      fullName:         "Nome Completo",
+      workEmail:        "E-mail Profissional",
+      minPassword:      "Mínimo 6 caracteres",
+      confirmPassword:  "Confirmar Palavra-passe",
+      passwordMismatch: "As palavras-passe não coincidem",
+      launch:           "Lançar o meu espaço de trabalho",
+      settingUp:        "A configurar...",
+      alreadyAccount:   "Já tem uma conta?",
+    },
+
+    // ── Landing ───────────────────────────────────────────────────────────────
+    landing: {
+      tagline:     "Criado para comerciantes e empresas africanas",
+      heroTitle:   "Gira todo o seu negócio",
+      heroTitleEm: "numa só plataforma",
+      heroDesc:    "Inventário, vendas, contabilidade, RH, PDV, CRM e serviço em campo — tudo ligado, em tempo real. Sem folhas de cálculo. Sem confusão.",
+      trialCta:    "Começar gratuitamente",
+      signinCta:   "Entrar no meu espaço",
+      noCard:      "Sem cartão de crédito · Acesso completo por 14 dias",
+      modulesTitle:"Tudo o que a sua empresa precisa",
+      modulesDesc: "Active apenas os módulos de que necessita. Cresça ao seu ritmo.",
+      whyTitle:    "Porquê o Kubika?",
+      whyDesc:     "A maioria dos ERP não foi criada para os mercados africanos. O Kubika foi.",
+      pricingTitle:"Preços simples e transparentes",
+      pricingDesc: "Comece gratuitamente. Cresça conforme o seu negócio. Cancele quando quiser.",
+      ctaTitle:    "Pronto para tomar o controlo do seu negócio?",
+      ctaDesc:     "Junte-se às empresas em toda a África que usam o Kubika para gerir operações, fechar negócios mais rapidamente e crescer com confiança.",
+    },
+
+    // ── Dashboard ─────────────────────────────────────────────────────────────
+    dashboard: {
+      title:           "Painel",
+      welcome:         "Bem-vindo de volta",
+      totalRevenue:    "Volume de Negócios",
+      totalExpenses:   "Total de Despesas",
+      outstanding:     "Em Aberto",
+      netProfit:       "Lucro Líquido",
+      recentInvoices:  "Faturas Recentes",
+      recentOrders:    "Encomendas Recentes",
+      quickActions:    "Acções Rápidas",
+      newSalesOrder:   "Nova Encomenda",
+      newInvoice:      "Nova Fatura",
+      newContact:      "Novo Contacto",
+      newPurchaseOrder:"Nova Ordem de Compra",
+    },
+
+    // ── Contacts ──────────────────────────────────────────────────────────────
+    contacts: {
+      title:      "Contactos",
+      newContact: "Novo Contacto",
+      name:       "Nome",
+      email:      "E-mail",
+      phone:      "Telefone",
+      type:       "Tipo",
+      customer:   "Cliente",
+      supplier:   "Fornecedor",
+      both:       "Ambos",
+      address:    "Morada",
+      city:       "Cidade",
+      country:    "País",
+      taxId:      "NIF",
+      notes:      "Notas",
+    },
+
+    // ── Common form labels ────────────────────────────────────────────────────
+    form: {
+      required: "Obrigatório",
+      optional: "Opcional",
+      select:   "Seleccionar...",
+      noResults:"Sem resultados",
+      loading:  "A carregar...",
+    },
+  },
+
+  en: {
+    // ── Nav ──────────────────────────────────────────────────────────────────
+    nav: {
+      dashboard:        "Dashboard",
+      contacts:         "Contacts",
+      inventory:        "Inventory",
+      products:         "Products",
+      operations:       "Operations",
+      warehouses:       "Warehouses",
+      sales:            "Sales",
+      orders:           "Orders",
+      invoices:         "Invoices",
+      purchasing:       "Purchasing",
+      purchaseOrders:   "Purchase Orders",
+      supplierBills:    "Supplier Bills",
+      accounting:       "Accounting",
+      chartOfAccounts:  "Chart of Accounts",
+      journalEntries:   "Journal Entries",
+      profitLoss:       "Profit & Loss",
+      balanceSheet:     "Balance Sheet",
+      currencies:       "Currencies",
+      analyticAccounts: "Analytic Accounts",
+      hrPayroll:        "HR & Payroll",
+      employees:        "Employees",
+      payroll:          "Payroll",
+      projects:         "Projects",
+      crm:              "CRM",
+      pipeline:         "Pipeline",
+      allLeads:         "All Leads",
+      pointOfSale:      "Point of Sale",
+      fieldService:     "Field Service",
+      serviceOrders:    "Service Orders",
+      worksheets:       "Worksheets",
+      statements:       "Statements",
+      importData:       "Import Data",
+      reports:          "Reports",
+      payments:         "Payments",
+      company:          "Company",
+      settings:         "Settings",
+    },
+
     actions: {
       save:        "Save",
       cancel:      "Cancel",
@@ -81,7 +270,6 @@ const translations = {
       upload:      "Upload",
     },
 
-    // ── Status labels ─────────────────────────────────────────────────────────
     status: {
       draft:       "Draft",
       confirmed:   "Confirmed",
@@ -103,22 +291,20 @@ const translations = {
       lost:        "Lost",
     },
 
-    // ── Auth ──────────────────────────────────────────────────────────────────
     auth: {
-      signIn:           "Sign in",
-      signOut:          "Sign out",
-      welcomeBack:      "Welcome back",
-      enterCredentials: "Enter your credentials to access your account",
-      email:            "Email",
-      password:         "Password",
+      signIn:            "Sign in",
+      signOut:           "Sign out",
+      welcomeBack:       "Welcome back",
+      enterCredentials:  "Enter your credentials to access your account",
+      email:             "Email",
+      password:          "Password",
       invalidCredentials:"Invalid email or password.",
-      signingIn:        "Signing in...",
-      noAccount:        "Don't have an account?",
-      startTrial:       "Start free trial",
-      register:         "Register",
+      signingIn:         "Signing in...",
+      noAccount:         "Don't have an account?",
+      startTrial:        "Start free trial",
+      register:          "Register",
     },
 
-    // ── Register ──────────────────────────────────────────────────────────────
     register: {
       title:            "Start your free trial",
       subtitle:         "No credit card required",
@@ -139,7 +325,6 @@ const translations = {
       alreadyAccount:   "Already have an account?",
     },
 
-    // ── Landing ───────────────────────────────────────────────────────────────
     landing: {
       tagline:     "Built for African traders & businesses",
       heroTitle:   "Run your entire business",
@@ -158,7 +343,6 @@ const translations = {
       ctaDesc:     "Join businesses across Africa using Kubika to manage operations, close deals faster, and grow with confidence.",
     },
 
-    // ── Dashboard ─────────────────────────────────────────────────────────────
     dashboard: {
       title:           "Dashboard",
       welcome:         "Welcome back",
@@ -175,7 +359,6 @@ const translations = {
       newPurchaseOrder:"New Purchase Order",
     },
 
-    // ── Contacts ──────────────────────────────────────────────────────────────
     contacts: {
       title:      "Contacts",
       newContact: "New Contact",
@@ -193,7 +376,6 @@ const translations = {
       notes:      "Notes",
     },
 
-    // ── Common form labels ────────────────────────────────────────────────────
     form: {
       required: "Required",
       optional: "Optional",
@@ -206,45 +388,44 @@ const translations = {
   fr: {
     // ── Nav ──────────────────────────────────────────────────────────────────
     nav: {
-      dashboard:     "Tableau de bord",
-      contacts:      "Contacts",
-      inventory:     "Inventaire",
-      products:      "Produits",
-      operations:    "Opérations",
-      warehouses:    "Entrepôts",
-      sales:         "Ventes",
-      orders:        "Commandes",
-      invoices:      "Factures",
-      purchasing:    "Achats",
-      purchaseOrders:"Bons de commande",
-      supplierBills: "Factures fournisseurs",
-      accounting:    "Comptabilité",
-      chartOfAccounts:"Plan comptable",
-      journalEntries:"Écritures comptables",
-      profitLoss:    "Compte de résultat",
-      balanceSheet:  "Bilan comptable",
-      currencies:    "Devises",
+      dashboard:        "Tableau de bord",
+      contacts:         "Contacts",
+      inventory:        "Inventaire",
+      products:         "Produits",
+      operations:       "Opérations",
+      warehouses:       "Entrepôts",
+      sales:            "Ventes",
+      orders:           "Commandes",
+      invoices:         "Factures",
+      purchasing:       "Achats",
+      purchaseOrders:   "Bons de commande",
+      supplierBills:    "Factures fournisseurs",
+      accounting:       "Comptabilité",
+      chartOfAccounts:  "Plan comptable",
+      journalEntries:   "Écritures comptables",
+      profitLoss:       "Compte de résultat",
+      balanceSheet:     "Bilan comptable",
+      currencies:       "Devises",
       analyticAccounts: "Comptes analytiques",
-      hrPayroll:     "RH & Paie",
-      employees:     "Employés",
-      payroll:       "Paie",
-      projects:      "Projets",
-      crm:           "CRM",
-      pipeline:      "Pipeline",
-      allLeads:      "Tous les prospects",
-      pointOfSale:   "Point de vente",
-      fieldService:  "Service terrain",
-      serviceOrders: "Ordres de service",
-      worksheets:    "Feuilles de travail",
-      statements:    "Relevés de compte",
-      importData:    "Importer des données",
-      reports:       "Rapports",
-      payments:      "Paiements",
-      company:       "Entreprise",
-      settings:      "Paramètres",
+      hrPayroll:        "RH & Paie",
+      employees:        "Employés",
+      payroll:          "Paie",
+      projects:         "Projets",
+      crm:              "CRM",
+      pipeline:         "Pipeline",
+      allLeads:         "Tous les prospects",
+      pointOfSale:      "Point de vente",
+      fieldService:     "Service terrain",
+      serviceOrders:    "Ordres de service",
+      worksheets:       "Feuilles de travail",
+      statements:       "Relevés de compte",
+      importData:       "Importer des données",
+      reports:          "Rapports",
+      payments:         "Paiements",
+      company:          "Entreprise",
+      settings:         "Paramètres",
     },
 
-    // ── Common actions ────────────────────────────────────────────────────────
     actions: {
       save:        "Enregistrer",
       cancel:      "Annuler",
@@ -270,7 +451,6 @@ const translations = {
       upload:      "Téléverser",
     },
 
-    // ── Status labels ─────────────────────────────────────────────────────────
     status: {
       draft:       "Brouillon",
       confirmed:   "Confirmé",
@@ -292,22 +472,20 @@ const translations = {
       lost:        "Perdu",
     },
 
-    // ── Auth ──────────────────────────────────────────────────────────────────
     auth: {
-      signIn:           "Se connecter",
-      signOut:          "Se déconnecter",
-      welcomeBack:      "Bon retour",
-      enterCredentials: "Entrez vos identifiants pour accéder à votre compte",
-      email:            "E-mail",
-      password:         "Mot de passe",
+      signIn:            "Se connecter",
+      signOut:           "Se déconnecter",
+      welcomeBack:       "Bon retour",
+      enterCredentials:  "Entrez vos identifiants pour accéder à votre compte",
+      email:             "E-mail",
+      password:          "Mot de passe",
       invalidCredentials:"E-mail ou mot de passe invalide.",
-      signingIn:        "Connexion en cours...",
-      noAccount:        "Pas encore de compte ?",
-      startTrial:       "Commencer l'essai gratuit",
-      register:         "S'inscrire",
+      signingIn:         "Connexion en cours...",
+      noAccount:         "Pas encore de compte ?",
+      startTrial:        "Commencer l'essai gratuit",
+      register:          "S'inscrire",
     },
 
-    // ── Register ──────────────────────────────────────────────────────────────
     register: {
       title:            "Commencez votre essai gratuit",
       subtitle:         "Sans carte bancaire",
@@ -328,7 +506,6 @@ const translations = {
       alreadyAccount:   "Vous avez déjà un compte ?",
     },
 
-    // ── Landing ───────────────────────────────────────────────────────────────
     landing: {
       tagline:     "Conçu pour les commerçants et entreprises africains",
       heroTitle:   "Gérez toute votre entreprise",
@@ -347,7 +524,6 @@ const translations = {
       ctaDesc:     "Rejoignez les entreprises à travers l'Afrique qui utilisent Kubika pour gérer leurs opérations, conclure des ventes et croître en toute confiance.",
     },
 
-    // ── Dashboard ─────────────────────────────────────────────────────────────
     dashboard: {
       title:           "Tableau de bord",
       welcome:         "Bon retour",
@@ -364,7 +540,6 @@ const translations = {
       newPurchaseOrder:"Nouveau bon de commande",
     },
 
-    // ── Contacts ──────────────────────────────────────────────────────────────
     contacts: {
       title:      "Contacts",
       newContact: "Nouveau contact",
@@ -382,7 +557,6 @@ const translations = {
       notes:      "Notes",
     },
 
-    // ── Common form labels ────────────────────────────────────────────────────
     form: {
       required: "Obligatoire",
       optional: "Facultatif",
@@ -393,11 +567,11 @@ const translations = {
   },
 } as const;
 
-export type Translations = typeof translations.en;
+export type Translations = typeof translations.pt;
 export type TranslationKey = keyof Translations;
 
 export function getTranslations(locale: Locale): Translations {
-  return (translations[locale] ?? translations.en) as unknown as Translations;
+  return (translations[locale] ?? translations.pt) as unknown as Translations;
 }
 
 // Type-safe nested key access: t("nav.dashboard") → string
