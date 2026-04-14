@@ -1,5 +1,6 @@
-import { getProject } from "@/lib/actions/projects";
+import { getProject, getAnalyticAccounts } from "@/lib/actions/projects";
 import { getEmployees } from "@/lib/actions/hr";
+import { ProjectEditDialog } from "./project-edit-dialog";
 import { Badge } from "@/components/ui/badge";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
@@ -17,9 +18,10 @@ const priorityColor: Record<string, string> = {
 };
 
 export default async function ProjectPage({ params }: { params: { id: string } }) {
-  const [project, employees] = await Promise.all([
+  const [project, employees, analyticAccounts] = await Promise.all([
     getProject(params.id),
     getEmployees(),
+    getAnalyticAccounts(),
   ]);
   if (!project) notFound();
 
@@ -52,7 +54,10 @@ export default async function ProjectPage({ params }: { params: { id: string } }
             <p className="text-sm text-muted-foreground mt-2 max-w-2xl">{project.description}</p>
           )}
         </div>
-        <ProjectStatusSelect projectId={project.id} currentStatus={project.status} />
+        <div className="flex items-center gap-2">
+          <ProjectEditDialog project={project} analyticAccounts={analyticAccounts} />
+          <ProjectStatusSelect projectId={project.id} currentStatus={project.status} />
+        </div>
       </div>
 
       {/* KPI row */}
