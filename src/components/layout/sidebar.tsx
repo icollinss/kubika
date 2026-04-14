@@ -66,6 +66,7 @@ export function Sidebar() {
         { href: "/dashboard/accounting/reports/pl",            label: n.profitLoss,      icon: TrendingUp },
         { href: "/dashboard/accounting/reports/balance-sheet", label: n.balanceSheet,    icon: Scale },
         { href: "/dashboard/accounting/currencies",            label: n.currencies,      icon: Globe },
+        { href: "/dashboard/accounting/analytic",             label: n.analyticAccounts, icon: BarChart3 },
       ],
     },
     {

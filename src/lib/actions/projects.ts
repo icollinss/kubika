@@ -40,8 +40,34 @@ export async function createAnalyticAccount(data: {
   const account = await prisma.analyticAccount.create({
     data: { ...data, companyId },
   });
+  revalidatePath("/dashboard/accounting/analytic");
   revalidatePath("/dashboard/projects");
   return account;
+}
+
+export async function updateAnalyticAccount(id: string, data: {
+  code: string;
+  name: string;
+  description?: string;
+}) {
+  const companyId = await getCompanyId();
+  await prisma.analyticAccount.update({ where: { id, companyId }, data });
+  revalidatePath("/dashboard/accounting/analytic");
+}
+
+export async function toggleAnalyticAccount(id: string) {
+  const companyId = await getCompanyId();
+  const acc = await prisma.analyticAccount.findFirstOrThrow({ where: { id, companyId } });
+  await prisma.analyticAccount.update({ where: { id }, data: { isActive: !acc.isActive } });
+  revalidatePath("/dashboard/accounting/analytic");
+}
+
+export async function getAllAnalyticAccounts() {
+  const companyId = await getCompanyId();
+  return prisma.analyticAccount.findMany({
+    where: { companyId },
+    orderBy: { code: "asc" },
+  });
 }
 
 // ─── Projects ─────────────────────────────────────────────────────────────────
