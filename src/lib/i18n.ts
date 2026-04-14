@@ -586,3 +586,19 @@ export function translate(locale: Locale, key: FlatKey): string {
   const t = getTranslations(locale);
   return (t[section] as Record<string, string>)[subkey] ?? key;
 }
+
+/**
+ * Server-side: read the locale from the Next.js cookies() API.
+ * Import `cookies` from "next/headers" in your server component and pass it here.
+ * Usage in a server component:
+ *   import { cookies } from "next/headers";
+ *   import { getServerTranslations } from "@/lib/i18n";
+ *   const t = await getServerTranslations();
+ */
+export async function getServerTranslations(): Promise<Translations> {
+  const { cookies } = await import("next/headers");
+  const store = await cookies();
+  const locale = store.get(LOCALE_COOKIE)?.value as Locale | undefined;
+  const valid  = (["pt", "en", "fr"] as Locale[]).includes(locale as Locale);
+  return getTranslations(valid ? (locale as Locale) : DEFAULT_LOCALE);
+}

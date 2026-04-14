@@ -3,6 +3,8 @@ import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Providers } from "@/components/providers";
+import { cookies } from "next/headers";
+import { LOCALE_COOKIE, type Locale, LOCALES } from "@/lib/i18n";
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
@@ -21,19 +23,24 @@ export const metadata: Metadata = {
   description: "Manage your business with Kubika — inventory, sales, accounting, and more.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const cookieLocale = cookieStore.get(LOCALE_COOKIE)?.value as Locale | undefined;
+  const validLocales = LOCALES.map((l) => l.code);
+  const initialLocale: Locale = cookieLocale && validLocales.includes(cookieLocale) ? cookieLocale : "pt";
+
   return (
     <html
-      lang="en"
+      lang={initialLocale}
       className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", inter.variable)}
     >
       <body className="min-h-full flex flex-col">
-          <Providers>{children}</Providers>
-        </body>
+        <Providers initialLocale={initialLocale}>{children}</Providers>
+      </body>
     </html>
   );
 }
