@@ -107,7 +107,7 @@ export function MilestoneSection({ projectId, milestones }: { projectId: string;
                 </div>
                 {ms.dueDate && (
                   <span className="text-xs text-muted-foreground shrink-0">
-                    {format(new Date(ms.dueDate), "dd MMM")}
+                    {format(new Date(ms.dueDate), "dd/MM")}
                   </span>
                 )}
               </div>

@@ -92,11 +92,11 @@ export default async function ProjectPage({ params }: { params: { id: string } }
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm rounded-lg border p-4">
         <div>
           <span className="text-muted-foreground text-xs">Start Date</span>
-          <p className="mt-0.5">{project.startDate ? format(new Date(project.startDate), "dd MMM yyyy") : "—"}</p>
+          <p className="mt-0.5">{project.startDate ? format(new Date(project.startDate), "dd/MM/yyyy") : "—"}</p>
         </div>
         <div>
           <span className="text-muted-foreground text-xs">End Date</span>
-          <p className="mt-0.5">{project.endDate ? format(new Date(project.endDate), "dd MMM yyyy") : "—"}</p>
+          <p className="mt-0.5">{project.endDate ? format(new Date(project.endDate), "dd/MM/yyyy") : "—"}</p>
         </div>
         <div>
           <span className="text-muted-foreground text-xs">Analytic Account</span>

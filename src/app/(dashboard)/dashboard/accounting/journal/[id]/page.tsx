@@ -22,7 +22,7 @@ export default async function JournalEntryPage({ params }: { params: { id: strin
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight font-mono">{entry.number}</h1>
-          <p className="text-sm text-muted-foreground mt-1">{format(new Date(entry.date), "dd MMMM yyyy")}</p>
+          <p className="text-sm text-muted-foreground mt-1">{format(new Date(entry.date), "dd/MM/yyyy")}</p>
         </div>
         <div className="flex items-center gap-3">
           <Badge variant="outline" className={statusColor[entry.status] ?? ""}>

@@ -118,7 +118,7 @@ export default async function ProjectsPage() {
                 </div>
 
                 {p.endDate && (
-                  <p className="text-xs text-muted-foreground">Due: {format(new Date(p.endDate), "dd MMM yyyy")}</p>
+                  <p className="text-xs text-muted-foreground">Due: {format(new Date(p.endDate), "dd/MM/yyyy")}</p>
                 )}
               </Link>
             );
