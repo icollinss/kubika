@@ -82,6 +82,28 @@ export default async function ContactDetailPage({ params }: Props) {
 
   const isCustomer = contact.type === "CUSTOMER" || contact.type === "BOTH";
 
+  // Statement ledger — one row per invoice, paid = total - amountDue
+  const statementRows = [...contact.invoices]
+    .sort((a, b) => new Date(a.invoiceDate ?? 0).getTime() - new Date(b.invoiceDate ?? 0).getTime())
+    .map((inv) => ({
+      id: inv.id,
+      date: inv.invoiceDate,
+      reference: inv.number,
+      href: `/dashboard/sales/invoices/${inv.id}`,
+      debit: inv.total,
+      credit: inv.total - inv.amountDue,
+      status: inv.status,
+    }));
+
+  let running = 0;
+  const statementWithBalance = statementRows.map((row) => {
+    running += row.debit - row.credit;
+    return { ...row, balance: running };
+  });
+
+  const totalBilled = contact.invoices.reduce((s, i) => s + i.total, 0);
+  const totalPaid   = contact.invoices.reduce((s, i) => s + (i.total - i.amountDue), 0);
+
   const defaultTab = contact.invoices.length > 0 ? "accounting"
     : contact.salesOrders.length > 0 ? "sales"
     : "notes";
@@ -254,6 +276,9 @@ export default async function ContactDetailPage({ params }: Props) {
               <TabsTrigger value="accounting">
                 {t.contacts.tabAccounting} ({contact.invoices.length + contact.supplierBills.length})
               </TabsTrigger>
+              {isCustomer && (
+                <TabsTrigger value="statement">{t.contacts.tabStatement} ({contact.invoices.length})</TabsTrigger>
+              )}
               {contact.serviceOrders.length > 0 && (
                 <TabsTrigger value="service">{t.contacts.tabService} ({contact.serviceOrders.length})</TabsTrigger>
               )}
@@ -264,16 +289,20 @@ export default async function ContactDetailPage({ params }: Props) {
             <TabsContent value="sales">
               <Card>
                 <CardContent className="p-0">
+                  {/* Tab header with New Quote button */}
+                  {isCustomer && (
+                    <div className="flex items-center justify-between px-4 py-2.5 border-b">
+                      <span className="text-sm font-semibold">{t.contacts.tabSales}</span>
+                      <Button size="sm" asChild>
+                        <Link href={`/dashboard/sales/orders/new?customerId=${contact.id}`}>
+                          <Plus className="h-3.5 w-3.5 mr-1.5" />{t.contacts.newQuote}
+                        </Link>
+                      </Button>
+                    </div>
+                  )}
                   {contact.salesOrders.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-10 gap-3">
+                    <div className="flex flex-col items-center justify-center py-10 gap-2">
                       <p className="text-sm text-muted-foreground">{t.contacts.noSalesOrders}</p>
-                      {isCustomer && (
-                        <Button size="sm" variant="outline" asChild>
-                          <Link href={`/dashboard/sales/orders/new?customerId=${contact.id}`}>
-                            <Plus className="h-3.5 w-3.5 mr-1.5" />{t.contacts.newQuote}
-                          </Link>
-                        </Button>
-                      )}
                     </div>
                   ) : (
                     <Table>
@@ -421,6 +450,75 @@ export default async function ContactDetailPage({ params }: Props) {
               )}
               {contact.invoices.length === 0 && contact.supplierBills.length === 0 && (
                 <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">{t.contacts.noAccountingData}</CardContent></Card>
+              )}
+            </TabsContent>
+
+            {/* Statement */}
+            <TabsContent value="statement">
+              {statementWithBalance.length === 0 ? (
+                <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">{t.contacts.noStatement}</CardContent></Card>
+              ) : (
+                <div className="space-y-3">
+                  {/* Summary cards */}
+                  <div className="grid grid-cols-3 gap-3">
+                    <Card>
+                      <CardContent className="py-3 px-4">
+                        <p className="text-xs text-muted-foreground">{t.contacts.totalBilled}</p>
+                        <p className="text-lg font-bold tabular-nums">{fmt(totalBilled)} AOA</p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="py-3 px-4">
+                        <p className="text-xs text-muted-foreground">{t.contacts.totalPaid}</p>
+                        <p className="text-lg font-bold text-green-600 tabular-nums">{fmt(totalPaid)} AOA</p>
+                      </CardContent>
+                    </Card>
+                    <Card className={outstanding > 0 ? "border-orange-200 bg-orange-50" : ""}>
+                      <CardContent className="py-3 px-4">
+                        <p className="text-xs text-muted-foreground">{t.contacts.colOutstanding}</p>
+                        <p className={`text-lg font-bold tabular-nums ${outstanding > 0 ? "text-orange-600" : "text-muted-foreground"}`}>{fmt(outstanding)} AOA</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Ledger table */}
+                  <Card>
+                    <CardContent className="p-0">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>{t.contacts.colDate}</TableHead>
+                            <TableHead>{t.contacts.colNumber}</TableHead>
+                            <TableHead>{t.contacts.colStatus}</TableHead>
+                            <TableHead className="text-right">{t.contacts.colDebit}</TableHead>
+                            <TableHead className="text-right">{t.contacts.colCredit}</TableHead>
+                            <TableHead className="text-right">{t.contacts.colBalance}</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {statementWithBalance.map((row) => (
+                            <TableRow key={row.id}>
+                              <TableCell className="text-muted-foreground text-sm">{fmtDate(row.date)}</TableCell>
+                              <TableCell>
+                                <Link href={row.href} className="font-mono font-medium hover:underline text-primary">{row.reference}</Link>
+                              </TableCell>
+                              <TableCell>
+                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[row.status] ?? "bg-gray-100 text-gray-600"}`}>
+                                  {statusLabel(row.status, t)}
+                                </span>
+                              </TableCell>
+                              <TableCell className="text-right font-mono text-sm">{fmt(row.debit)} AOA</TableCell>
+                              <TableCell className="text-right font-mono text-sm text-green-600">{row.credit > 0 ? `${fmt(row.credit)} AOA` : "—"}</TableCell>
+                              <TableCell className={`text-right font-mono text-sm font-semibold ${row.balance > 0 ? "text-orange-600" : "text-muted-foreground"}`}>
+                                {fmt(row.balance)} AOA
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                </div>
               )}
             </TabsContent>
 
