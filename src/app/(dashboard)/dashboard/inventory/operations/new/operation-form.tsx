@@ -20,8 +20,8 @@ const schema = z.object({
   note: z.string().optional(),
   lines: z.array(z.object({
     productId: z.string().min(1, "Select a product"),
-    quantity: z.coerce.number().min(0.001),
-    unitCost: z.coerce.number().min(0).default(0),
+    quantity: z.number().min(0.001),
+    unitCost: z.number().min(0),
     lotId: z.string().optional(),
     serialId: z.string().optional(),
     note: z.string().optional(),
@@ -51,7 +51,7 @@ const locationConfig = {
 };
 
 export function OperationForm({ moveType, products, internalLocations, vendorLocations, customerLocations, virtualLocations, onSubmit }: Props) {
-  const { register, handleSubmit, setValue, watch, control, formState: { errors, isSubmitting } } = useForm<OperationFormData>({
+  const { register, handleSubmit, setValue, watch, control, formState: { isSubmitting } } = useForm<OperationFormData>({
     resolver: zodResolver(schema),
     defaultValues: { moveType, lines: [{ productId: "", quantity: 1, unitCost: 0 }] },
   });
@@ -144,13 +144,13 @@ export function OperationForm({ moveType, products, internalLocations, vendorLoc
               {/* Quantity */}
               <div className="col-span-4 sm:col-span-2 space-y-1">
                 <Label className="text-xs text-muted-foreground">Quantity</Label>
-                <Input type="number" step="0.01" min="0" {...register(`lines.${idx}.quantity`)} />
+                <Input type="number" step="0.01" min="0" {...register(`lines.${idx}.quantity`, { valueAsNumber: true })} />
               </div>
 
               {/* Unit Cost */}
               <div className="col-span-4 sm:col-span-2 space-y-1">
                 <Label className="text-xs text-muted-foreground">Unit Cost (AOA)</Label>
-                <Input type="number" step="0.01" min="0" {...register(`lines.${idx}.unitCost`)} />
+                <Input type="number" step="0.01" min="0" {...register(`lines.${idx}.unitCost`, { valueAsNumber: true })} />
               </div>
 
               {/* Lot (if LOT tracking) */}

@@ -52,7 +52,7 @@ export function ProductForm({ defaultValues, onSubmit, submitLabel = "Save", uom
     setValue,
     watch,
     formState: { errors, isSubmitting },
-  } = useForm<ProductFormData>({
+  } = useForm<z.input<typeof schema>, unknown, z.output<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: {
       productType: "STORABLE",
@@ -72,7 +72,7 @@ export function ProductForm({ defaultValues, onSubmit, submitLabel = "Save", uom
   const productType = watch("productType");
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={handleSubmit(onSubmit as Parameters<typeof handleSubmit>[0])}>
       <Tabs defaultValue="general" className="space-y-6">
         <TabsList>
           <TabsTrigger value="general">General</TabsTrigger>

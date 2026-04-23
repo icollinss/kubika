@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getLocations } from "@/lib/actions/warehouse";
-import { getProducts } from "@/lib/actions/inventory";
+import { getProductsForOperation } from "@/lib/actions/inventory";
 import { createStockOperation } from "@/lib/actions/stock-operations";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,12 +22,12 @@ interface Props {
 
 export default async function NewOperationPage({ searchParams }: Props) {
   const { type = "RECEIPT" } = await searchParams;
-  const [locations, products] = await Promise.all([getLocations(), getProducts()]);
+  const [locations, products] = await Promise.all([getLocations(), getProductsForOperation()]);
 
-  const internalLocations = locations.filter((l) => l.locationType === "INTERNAL");
-  const vendorLocations = locations.filter((l) => l.locationType === "VENDOR");
-  const customerLocations = locations.filter((l) => l.locationType === "CUSTOMER");
-  const virtualLocations = locations.filter((l) => l.locationType === "VIRTUAL");
+  const internalLocations = locations.filter((l: { locationType: string }) => l.locationType === "INTERNAL");
+  const vendorLocations = locations.filter((l: { locationType: string }) => l.locationType === "VENDOR");
+  const customerLocations = locations.filter((l: { locationType: string }) => l.locationType === "CUSTOMER");
+  const virtualLocations = locations.filter((l: { locationType: string }) => l.locationType === "VIRTUAL");
 
   return (
     <div className="space-y-6 max-w-4xl">

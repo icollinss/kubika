@@ -41,7 +41,7 @@ export function ContactForm({ defaultValues, onSubmit, submitLabel = "Save" }: C
     setValue,
     watch,
     formState: { errors, isSubmitting },
-  } = useForm<ContactFormData>({
+  } = useForm<z.input<typeof schema>, unknown, z.output<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: {
       country: "Angola",
@@ -51,7 +51,7 @@ export function ContactForm({ defaultValues, onSubmit, submitLabel = "Save" }: C
   });
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit as Parameters<typeof handleSubmit>[0])} className="space-y-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {/* Name */}
         <div className="space-y-2 sm:col-span-2">

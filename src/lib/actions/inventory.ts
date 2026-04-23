@@ -2,7 +2,6 @@
 
 import { getCompanyId } from "@/lib/get-company-id";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { redirect } from "next/navigation";
@@ -133,6 +132,22 @@ export async function getProducts(search?: string, categoryId?: string, type?: s
       _count: { select: { lots: true, serials: true } },
     },
     orderBy: { createdAt: "desc" },
+  });
+}
+
+export async function getProductsForOperation() {
+  const companyId = await getCompanyId();
+  return prisma.product.findMany({
+    where: { companyId, isArchived: false },
+    select: {
+      id: true,
+      name: true,
+      internalRef: true,
+      trackingType: true,
+      lots: { select: { id: true, lotNumber: true } },
+      serials: { select: { id: true, serial: true } },
+    },
+    orderBy: { name: "asc" },
   });
 }
 

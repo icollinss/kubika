@@ -4,7 +4,6 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { FileText } from "lucide-react";
 import { InvoicesFilter } from "./invoices-filter";
-import Link from "next/link";
 import { ViewSwitcher, type ViewMode } from "@/components/views/view-switcher";
 import { KanbanBoard, type KanbanColumn } from "@/components/views/kanban-board";
 import { PivotTable, type PivotRow } from "@/components/views/pivot-table";

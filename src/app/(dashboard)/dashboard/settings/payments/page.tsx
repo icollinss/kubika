@@ -50,7 +50,7 @@ const PROVIDERS = [
   },
 ];
 
-export type ProviderDefinition = typeof PROVIDERS[number];
+export type ProviderDefinition = typeof PROVIDERS[number] & { comingSoon?: boolean };
 
 export default async function PaymentSettingsPage() {
   const configs = await getPaymentConfigs();
