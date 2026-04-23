@@ -1,69 +1,106 @@
 import { auth } from "@/auth";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Package, ShoppingCart, Receipt } from "lucide-react";
+import { prisma } from "@/lib/prisma";
+import { DashboardHome, type DashboardStats, type RecentSale } from "@/components/views/dashboard-home";
 
-const stats = [
-  { label: "Total Contacts", value: "0", icon: Users, color: "text-blue-500" },
-  { label: "Products", value: "0", icon: Package, color: "text-green-500" },
-  { label: "Sales Orders", value: "0", icon: ShoppingCart, color: "text-orange-500" },
-  { label: "Invoices", value: "0", icon: Receipt, color: "text-purple-500" },
-];
+async function getCompanyId(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { companyId: true },
+  });
+  return user?.companyId ?? null;
+}
 
-export default async function DashboardPage() {
-  const session = await auth();
+interface Props {
+  searchParams: Promise<{ view?: string }>;
+}
+
+export default async function DashboardPage({ searchParams }: Props) {
+  const [session, { view = "apps" }] = await Promise.all([
+    auth(),
+    searchParams,
+  ]);
+
+  const userName = session?.user?.name?.split(" ")[0] ?? "there";
+  const companyId = session?.user?.id ? await getCompanyId(session.user.id) : null;
+
+  let stats: DashboardStats = {
+    contacts: 0,
+    products: 0,
+    salesOrdersThisMonth: 0,
+    unpaidInvoices: 0,
+    unpaidAmount: 0,
+    revenueThisMonth: 0,
+    overdueInvoices: 0,
+  };
+
+  let recentSales: RecentSale[] = [];
+
+  if (companyId) {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const [
+      contacts,
+      products,
+      salesThisMonth,
+      unpaidData,
+      revenueData,
+      overdueCount,
+      recentSalesData,
+    ] = await Promise.all([
+      prisma.contact.count({ where: { companyId } }),
+      prisma.product.count({ where: { companyId, isArchived: false } }),
+      prisma.salesOrder.count({
+        where: { companyId, createdAt: { gte: monthStart } },
+      }),
+      prisma.invoice.aggregate({
+        where: { companyId, status: { in: ["DRAFT", "CONFIRMED", "PARTIAL", "OVERDUE"] } },
+        _count: true,
+        _sum: { amountDue: true },
+      }),
+      prisma.invoice.aggregate({
+        where: {
+          companyId,
+          status: { in: ["CONFIRMED", "PAID", "PARTIAL"] },
+          invoiceDate: { gte: monthStart },
+        },
+        _sum: { total: true },
+      }),
+      prisma.invoice.count({ where: { companyId, status: "OVERDUE" } }),
+      prisma.salesOrder.findMany({
+        where: { companyId },
+        orderBy: { createdAt: "desc" },
+        take: 5,
+        include: { customer: { select: { name: true } } },
+      }),
+    ]);
+
+    stats = {
+      contacts,
+      products,
+      salesOrdersThisMonth: salesThisMonth,
+      unpaidInvoices: unpaidData._count,
+      unpaidAmount: unpaidData._sum.amountDue ?? 0,
+      revenueThisMonth: revenueData._sum.total ?? 0,
+      overdueInvoices: overdueCount,
+    };
+
+    recentSales = recentSalesData.map((o) => ({
+      id: o.id,
+      number: o.number,
+      customer: o.customer.name,
+      total: o.total,
+      status: o.status,
+      date: o.createdAt,
+    }));
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">
-          Welcome back, {session?.user?.name?.split(" ")[0] ?? "there"} 👋
-        </h2>
-        <p className="text-muted-foreground text-sm mt-1">
-          Here&apos;s an overview of your business today.
-        </p>
-      </div>
-
-      {/* Stats */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map(({ label, value, icon: Icon, color }) => (
-          <Card key={label}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {label}
-              </CardTitle>
-              <Icon className={`h-4 w-4 ${color}`} />
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">{value}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Placeholder for future modules */}
-      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Recent Sales</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              No sales yet. Start by adding contacts and products.
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Low Stock Alerts</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              No inventory set up yet.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+    <DashboardHome
+      userName={userName}
+      stats={stats}
+      recentSales={recentSales}
+      view={(view === "overview" ? "overview" : "apps") as "apps" | "overview"}
+    />
   );
 }

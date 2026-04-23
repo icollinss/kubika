@@ -202,6 +202,83 @@ const translations = {
       noResults:"Sem resultados",
       loading:  "A carregar...",
     },
+
+    // ── Pages ─────────────────────────────────────────────────────────────────
+    pages: {
+      contacts: {
+        title: "Contactos", newBtn: "Novo Contacto",
+        empty: "Sem contactos ainda", emptyDesc: "Adicione o seu primeiro cliente ou fornecedor.",
+        colName: "Nome", colType: "Tipo", colEmail: "E-mail", colPhone: "Telefone", colCity: "Cidade",
+        groupCity: "Cidade",
+      },
+      salesOrders: {
+        title: "Encomendas de Venda", newBtn: "Nova Proposta",
+        empty: "Sem encomendas ainda", emptyDesc: "Crie a sua primeira proposta para começar.",
+        colNumber: "Número", colCustomer: "Cliente", colStatus: "Estado", colDate: "Data",
+        colLines: "Linhas", colInvoices: "Faturas", colTotal: "Total (AOA)",
+        groupMonth: "Mês",
+        statusQuotation: "Proposta", statusConfirmed: "Confirmado", statusDelivered: "Entregue", statusCancelled: "Cancelado",
+      },
+      invoices: {
+        title: "Faturas",
+        empty: "Sem faturas ainda", emptyDesc: "As faturas são geradas a partir de encomendas confirmadas.",
+        colNumber: "Número", colCustomer: "Cliente", colStatus: "Estado", colDate: "Data",
+        colDue: "Vencimento", colTotal: "Total", colPaid: "Pago", colDueAmt: "Em aberto",
+        groupCustomer: "Cliente",
+        statusDraft: "Rascunho", statusConfirmed: "Confirmada", statusPaid: "Paga",
+        statusPartial: "Parcial", statusOverdue: "Vencida", statusCancelled: "Cancelada",
+      },
+      purchaseOrders: {
+        title: "Ordens de Compra", newBtn: "Nova Ordem",
+        empty: "Sem ordens de compra ainda", emptyDesc: "Crie a sua primeira ordem de compra a fornecedores.",
+        colNumber: "Número", colSupplier: "Fornecedor", colStatus: "Estado", colDate: "Data",
+        colExpected: "Previsto", colLines: "Linhas", colTotal: "Total (AOA)",
+        groupSupplier: "Fornecedor",
+        statusDraft: "Rascunho", statusConfirmed: "Confirmado", statusReceived: "Recebido", statusCancelled: "Cancelado",
+      },
+      products: {
+        title: "Produtos", newBtn: "Novo Produto",
+        empty: "Sem produtos ainda", emptyDesc: "Adicione o seu primeiro produto para começar o inventário.",
+        colName: "Nome", colRef: "Ref / SKU", colCategory: "Categoria", colType: "Tipo",
+        colTracking: "Rastreio", colSalePrice: "Preço Venda", colCost: "Custo",
+        groupCategory: "Categoria",
+        typeStorable: "Armazém", typeConsumable: "Consumível", typeService: "Serviço",
+        trackingLots: "Lotes", trackingSerial: "Série",
+      },
+      leads: {
+        title: "Todos os Leads", newBtn: "Novo Lead",
+        empty: "Sem leads ainda", emptyDesc: "Adicione o seu primeiro lead para começar.",
+        colName: "Nome", colCompany: "Empresa", colSource: "Fonte", colStatus: "Estado",
+        colValue: "Valor Previsto", colCreated: "Criado",
+        groupSource: "Fonte",
+        noValue: "—",
+      },
+      pipeline: {
+        title: "Pipeline CRM", newBtn: "Novo Lead",
+        activeLeads: "leads activos", wonLeads: "ganhos",
+      },
+      employees: {
+        title: "Colaboradores", newBtn: "Novo Colaborador",
+        empty: "Sem colaboradores ainda", emptyDesc: "Adicione o seu primeiro colaborador.",
+      },
+      payroll: {
+        title: "Salários", newBtn: "Gerar Salários",
+        empty: "Sem salários gerados.",
+      },
+      projects: {
+        title: "Projectos", newBtn: "Novo Projecto",
+        empty: "Sem projectos ainda", emptyDesc: "Crie o seu primeiro projecto.",
+      },
+      fieldService: {
+        title: "Ordens de Serviço", newBtn: "Nova Ordem",
+        empty: "Sem ordens de serviço.", emptyDesc: "Crie a sua primeira ordem de serviço.",
+      },
+      reports: { title: "Relatórios" },
+      settings: { title: "Configurações", desc: "Configure a sua conta e integrações." },
+      company:  { title: "Perfil da Empresa" },
+      kanbanEmpty: "Sem registos",
+      viewList: "Lista", viewKanban: "Kanban", viewPivot: "Pivot",
+    },
   },
 
   en: {
