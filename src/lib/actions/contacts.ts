@@ -1,7 +1,7 @@
 "use server";
 
+import { getCompanyId } from "@/lib/get-company-id";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { redirect } from "next/navigation";
@@ -20,16 +20,6 @@ const contactSchema = z.object({
 
 export type ContactFormData = z.infer<typeof contactSchema>;
 
-async function getCompanyId() {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { companyId: true },
-  });
-  if (!user?.companyId) throw new Error("No company found");
-  return user.companyId;
-}
 
 export async function createContact(data: ContactFormData) {
   const companyId = await getCompanyId();

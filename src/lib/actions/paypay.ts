@@ -1,5 +1,6 @@
 "use server";
 
+import { getCompanyId } from "@/lib/get-company-id";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
@@ -11,13 +12,6 @@ import {
   cancelPayment,
 } from "@/lib/payments/paypay";
 
-async function getCompanyId() {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-  const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { companyId: true } });
-  if (!user?.companyId) throw new Error("No company");
-  return user.companyId;
-}
 
 async function getPayPayConfig(companyId: string) {
   const cfg = await prisma.paymentConfig.findFirst({

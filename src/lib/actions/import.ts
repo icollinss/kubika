@@ -1,16 +1,10 @@
 "use server";
 
+import { getCompanyId } from "@/lib/get-company-id";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
-async function getCompanyId() {
-  const session = await auth();
-  if (!session?.user?.email) throw new Error("Unauthenticated");
-  const user = await prisma.user.findUniqueOrThrow({ where: { email: session.user.email } });
-  if (!user.companyId) throw new Error("No company");
-  return user.companyId;
-}
 
 export type ImportRow = Record<string, string>;
 

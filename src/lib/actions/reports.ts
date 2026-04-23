@@ -1,16 +1,10 @@
 "use server";
 
+import { getCompanyId } from "@/lib/get-company-id";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { startOfMonth, endOfMonth, subMonths, format } from "date-fns";
 
-async function getCompanyId() {
-  const session = await auth();
-  if (!session?.user?.email) throw new Error("Unauthenticated");
-  const user = await prisma.user.findUniqueOrThrow({ where: { email: session.user.email } });
-  if (!user.companyId) throw new Error("No company");
-  return user.companyId;
-}
 
 // ─── Revenue summary ──────────────────────────────────────────────────────────
 

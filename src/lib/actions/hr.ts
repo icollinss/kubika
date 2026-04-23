@@ -1,19 +1,10 @@
 "use server";
 
+import { getCompanyId } from "@/lib/get-company-id";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 
-async function getCompanyId(): Promise<string> {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { companyId: true },
-  });
-  if (!user?.companyId) throw new Error("No company");
-  return user.companyId;
-}
 
 async function nextEmployeeNumber(companyId: string): Promise<string> {
   const count = await prisma.employee.count({ where: { companyId } });

@@ -56,8 +56,9 @@ function fmtDate(d: Date | string | null) {
 interface Props { params: Promise<{ id: string }> }
 
 export default async function ContactDetailPage({ params }: Props) {
-  const [{ id }, t] = await Promise.all([params, getServerTranslations()]);
-  const contact = await getContact(id);
+  const tPromise = getServerTranslations();
+  const { id } = await params;
+  const [contact, t] = await Promise.all([getContact(id), tPromise]);
   if (!contact) notFound();
 
   const typeBadge: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
