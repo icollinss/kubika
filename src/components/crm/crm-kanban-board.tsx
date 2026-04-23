@@ -1,19 +1,20 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
+  useDroppable,
+  useDraggable,
   type DragStartEvent,
   type DragEndEvent,
   type DragOverEvent,
 } from "@dnd-kit/core";
-import { useDroppable } from "@dnd-kit/core";
-import { useDraggable } from "@dnd-kit/core";
 import { cn } from "@/lib/utils";
 import { updateLeadStatus } from "@/lib/actions/crm";
 
@@ -57,24 +58,10 @@ function getInitials(name: string) {
   return name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
 }
 
-// ── Single card (used both in column and in drag overlay) ─────────────────────
-function LeadCard({
-  lead,
-  accent,
-  isDragging = false,
-}: {
-  lead: CrmLead;
-  accent: string;
-  isDragging?: boolean;
-}) {
+// ── Card visual (no interactivity) ────────────────────────────────────────────
+function LeadCard({ lead, accent }: { lead: CrmLead; accent: string }) {
   return (
-    <div
-      className={cn(
-        "rounded-lg border bg-card p-3 shadow-sm border-l-4 select-none",
-        accent,
-        isDragging ? "opacity-50" : "hover:shadow-md transition-shadow"
-      )}
-    >
+    <div className={cn("rounded-lg border bg-card p-3 shadow-sm border-l-4 select-none", accent)}>
       <div className="flex items-start gap-2.5">
         <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold shrink-0 mt-0.5">
           {getInitials(lead.name)}
@@ -102,24 +89,28 @@ function LeadCard({
   );
 }
 
-// ── Draggable card wrapper ────────────────────────────────────────────────────
+// ── Draggable card — no <a> / Link inside to avoid native browser drag conflict
 function DraggableCard({ lead, accent }: { lead: CrmLead; accent: string }) {
+  const router = useRouter();
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: lead.id,
-    data: { lead, accent },
+    data: { lead },
   });
 
   return (
-    <div ref={setNodeRef} {...listeners} {...attributes} className="cursor-grab active:cursor-grabbing">
-      <Link
-        href={`/dashboard/crm/leads/${lead.id}`}
-        onClick={(e) => {
-          // Prevent navigation if this was a drag gesture
-          if (isDragging) e.preventDefault();
-        }}
-      >
-        <LeadCard lead={lead} accent={accent} isDragging={isDragging} />
-      </Link>
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      style={{ touchAction: "none" }}
+      className={cn(
+        "cursor-grab active:cursor-grabbing",
+        isDragging && "opacity-40"
+      )}
+      // @dnd-kit automatically suppresses clicks that follow a drag gesture
+      onClick={() => router.push(`/dashboard/crm/leads/${lead.id}`)}
+    >
+      <LeadCard lead={lead} accent={accent} />
     </div>
   );
 }
@@ -139,7 +130,6 @@ function DroppableColumn({
 
   return (
     <div className="flex-shrink-0 w-72">
-      {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className={cn("text-sm font-semibold", config.headerColor)}>{config.label}</span>
@@ -152,16 +142,15 @@ function DroppableColumn({
         )}
       </div>
 
-      {/* Drop zone */}
       <div
         ref={setNodeRef}
         className={cn(
-          "space-y-2 min-h-24 rounded-lg p-1 transition-colors",
-          isOver && "bg-muted/50 ring-2 ring-inset ring-primary/20"
+          "space-y-2 min-h-32 rounded-lg p-1 transition-colors",
+          isOver && "bg-primary/5 ring-2 ring-inset ring-primary/30"
         )}
       >
         {leads.length === 0 && (
-          <div className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
+          <div className="rounded-lg border border-dashed p-6 text-center text-xs text-muted-foreground">
             Arrastar aqui
           </div>
         )}
@@ -180,7 +169,8 @@ export function CrmKanbanBoard({ leads: initialLeads }: { leads: CrmLead[] }) {
   const [overId, setOverId] = useState<string | null>(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } })
   );
 
   const activeLead = activeId ? leads.find((l) => l.id === activeId) : null;
@@ -206,7 +196,7 @@ export function CrmKanbanBoard({ leads: initialLeads }: { leads: CrmLead[] }) {
       const lead = leads.find((l) => l.id === leadId);
       if (!lead || lead.status === newStatus) return;
 
-      // Optimistic update
+      // Optimistic update — move card immediately
       setLeads((prev) =>
         prev.map((l) => (l.id === leadId ? { ...l, status: newStatus } : l))
       );
@@ -243,7 +233,7 @@ export function CrmKanbanBoard({ leads: initialLeads }: { leads: CrmLead[] }) {
 
       <DragOverlay dropAnimation={null}>
         {activeLead && activeColumn ? (
-          <div className="rotate-2 opacity-95 shadow-xl w-72">
+          <div className="rotate-2 opacity-90 shadow-xl w-72">
             <LeadCard lead={activeLead} accent={activeColumn.accent} />
           </div>
         ) : null}
