@@ -1,21 +1,35 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getContact, updateContact, deleteContact, addContactNote } from "@/lib/actions/contacts";
+import { getServerTranslations } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
-import { ChevronLeft, ShoppingCart, FileText, ShoppingBag, Receipt, Wrench, Mail, Phone, MapPin, Hash, MessageSquare } from "lucide-react";
+import { ChevronLeft, ShoppingCart, FileText, ShoppingBag, Receipt, Wrench, Mail, Phone, MapPin, Hash, MessageSquare, Plus } from "lucide-react";
 import { ContactEditDialog } from "./contact-edit-dialog";
 import { ContactNoteForm } from "./contact-note-form";
+import type { Translations } from "@/lib/i18n";
 
-const typeBadge: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
-  CUSTOMER: { label: "Cliente",    variant: "default" },
-  SUPPLIER: { label: "Fornecedor", variant: "secondary" },
-  BOTH:     { label: "Ambos",      variant: "outline" },
-};
+function statusLabel(status: string, t: Translations): string {
+  const map: Record<string, string> = {
+    DRAFT:       t.status.draft,
+    CONFIRMED:   t.status.confirmed,
+    PAID:        t.status.paid,
+    PARTIAL:     t.status.partial,
+    OVERDUE:     t.status.overdue,
+    CANCELLED:   t.status.cancelled,
+    DELIVERED:   t.status.delivered,
+    QUOTATION:   t.status.quotation,
+    RECEIVED:    t.status.received,
+    OPEN:        t.status.open,
+    IN_PROGRESS: t.status.inProgress,
+    DONE:        t.status.done,
+  };
+  return map[status] ?? status;
+}
 
 const statusColors: Record<string, string> = {
   DRAFT:      "bg-gray-100 text-gray-600",
@@ -24,6 +38,7 @@ const statusColors: Record<string, string> = {
   PARTIAL:    "bg-yellow-100 text-yellow-700",
   OVERDUE:    "bg-red-100 text-red-700",
   CANCELLED:  "bg-red-50 text-red-400",
+  QUOTATION:  "bg-gray-100 text-gray-600",
   RECEIVED:   "bg-green-100 text-green-700",
   OPEN:       "bg-blue-100 text-blue-700",
   IN_PROGRESS:"bg-purple-100 text-purple-700",
@@ -41,9 +56,15 @@ function fmtDate(d: Date | string | null) {
 interface Props { params: Promise<{ id: string }> }
 
 export default async function ContactDetailPage({ params }: Props) {
-  const { id } = await params;
+  const [{ id }, t] = await Promise.all([params, getServerTranslations()]);
   const contact = await getContact(id);
   if (!contact) notFound();
+
+  const typeBadge: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
+    CUSTOMER: { label: t.contacts.customer, variant: "default"   },
+    SUPPLIER: { label: t.contacts.supplier, variant: "secondary" },
+    BOTH:     { label: t.contacts.both,     variant: "outline"   },
+  };
 
   const badge = typeBadge[contact.type];
 
@@ -59,15 +80,28 @@ export default async function ContactDetailPage({ params }: Props) {
   const del     = deleteContact.bind(null, id);
   const addNote = addContactNote.bind(null, id);
 
+  const isCustomer = contact.type === "CUSTOMER" || contact.type === "BOTH";
+
   const defaultTab = contact.invoices.length > 0 ? "accounting"
     : contact.salesOrders.length > 0 ? "sales"
     : "notes";
 
   return (
     <div className="space-y-4 max-w-6xl">
-      <Button variant="ghost" size="sm" asChild>
-        <Link href="/dashboard/contacts"><ChevronLeft className="h-4 w-4 mr-1" />Contactos</Link>
-      </Button>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <Button variant="ghost" size="sm" asChild>
+          <Link href="/dashboard/contacts">
+            <ChevronLeft className="h-4 w-4 mr-1" />{t.contacts.title}
+          </Link>
+        </Button>
+        {isCustomer && (
+          <Button size="sm" asChild>
+            <Link href={`/dashboard/sales/orders/new?customerId=${contact.id}`}>
+              <Plus className="h-4 w-4 mr-1.5" />{t.contacts.newQuote}
+            </Link>
+          </Button>
+        )}
+      </div>
 
       {/* ── Smart buttons ─────────────────────────────────────────────── */}
       {(contact.salesOrders.length > 0 || contact.invoices.length > 0 || contact.purchaseOrders.length > 0 || contact.supplierBills.length > 0 || contact.serviceOrders.length > 0) && (
@@ -77,7 +111,7 @@ export default async function ContactDetailPage({ params }: Props) {
               <ShoppingCart className="h-4 w-4 text-blue-500" />
               <div>
                 <p className="font-semibold leading-none">{contact.salesOrders.length}</p>
-                <p className="text-xs text-muted-foreground">Encomendas</p>
+                <p className="text-xs text-muted-foreground">{t.contacts.smartOrders}</p>
               </div>
               <Separator orientation="vertical" className="h-5 mx-1" />
               <span className="text-xs font-mono text-muted-foreground">{fmt(salesTotal)} AOA</span>
@@ -88,7 +122,7 @@ export default async function ContactDetailPage({ params }: Props) {
               <FileText className="h-4 w-4 text-green-500" />
               <div>
                 <p className="font-semibold leading-none">{contact.invoices.length}</p>
-                <p className="text-xs text-muted-foreground">Faturas</p>
+                <p className="text-xs text-muted-foreground">{t.nav.invoices}</p>
               </div>
               <Separator orientation="vertical" className="h-5 mx-1" />
               <span className="text-xs font-mono text-muted-foreground">{fmt(invoicesTotal)} AOA</span>
@@ -99,7 +133,7 @@ export default async function ContactDetailPage({ params }: Props) {
               <Receipt className="h-4 w-4 text-orange-500" />
               <div>
                 <p className="font-semibold leading-none text-orange-700">{fmt(outstanding)} AOA</p>
-                <p className="text-xs text-orange-500">Em aberto</p>
+                <p className="text-xs text-orange-500">{t.contacts.smartOutstanding}</p>
               </div>
             </div>
           )}
@@ -108,7 +142,7 @@ export default async function ContactDetailPage({ params }: Props) {
               <ShoppingBag className="h-4 w-4 text-purple-500" />
               <div>
                 <p className="font-semibold leading-none">{contact.purchaseOrders.length}</p>
-                <p className="text-xs text-muted-foreground">Compras</p>
+                <p className="text-xs text-muted-foreground">{t.nav.purchasing}</p>
               </div>
               <Separator orientation="vertical" className="h-5 mx-1" />
               <span className="text-xs font-mono text-muted-foreground">{fmt(purchasesTotal)} AOA</span>
@@ -119,7 +153,7 @@ export default async function ContactDetailPage({ params }: Props) {
               <Receipt className="h-4 w-4 text-red-500" />
               <div>
                 <p className="font-semibold leading-none">{contact.supplierBills.length}</p>
-                <p className="text-xs text-muted-foreground">Fat. Fornecedor</p>
+                <p className="text-xs text-muted-foreground">{t.contacts.smartBills}</p>
               </div>
               <Separator orientation="vertical" className="h-5 mx-1" />
               <span className="text-xs font-mono text-muted-foreground">{fmt(billsTotal)} AOA</span>
@@ -130,7 +164,7 @@ export default async function ContactDetailPage({ params }: Props) {
               <Wrench className="h-4 w-4 text-teal-500" />
               <div>
                 <p className="font-semibold leading-none">{contact.serviceOrders.length}</p>
-                <p className="text-xs text-muted-foreground">Serviços</p>
+                <p className="text-xs text-muted-foreground">{t.contacts.smartServices}</p>
               </div>
             </div>
           )}
@@ -195,12 +229,12 @@ export default async function ContactDetailPage({ params }: Props) {
                 <Separator />
                 <div className="text-xs space-y-1.5 text-muted-foreground">
                   <div className="flex justify-between">
-                    <span>Limite de crédito</span>
+                    <span>{t.contacts.creditLimit}</span>
                     <span className="font-mono font-medium">{fmt(contact.creditLimit)} AOA</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Prazo de pagamento</span>
-                    <span>{contact.creditTermsDays} dias</span>
+                    <span>{t.contacts.paymentTerms}</span>
+                    <span>{contact.creditTermsDays} {t.contacts.days}</span>
                   </div>
                 </div>
               </>
@@ -215,15 +249,15 @@ export default async function ContactDetailPage({ params }: Props) {
         <div className="lg:col-span-2">
           <Tabs defaultValue={defaultTab}>
             <TabsList>
-              <TabsTrigger value="sales">Vendas ({contact.salesOrders.length})</TabsTrigger>
-              <TabsTrigger value="purchases">Compras ({contact.purchaseOrders.length})</TabsTrigger>
+              <TabsTrigger value="sales">{t.contacts.tabSales} ({contact.salesOrders.length})</TabsTrigger>
+              <TabsTrigger value="purchases">{t.contacts.tabPurchases} ({contact.purchaseOrders.length})</TabsTrigger>
               <TabsTrigger value="accounting">
-                Contabilidade ({contact.invoices.length + contact.supplierBills.length})
+                {t.contacts.tabAccounting} ({contact.invoices.length + contact.supplierBills.length})
               </TabsTrigger>
               {contact.serviceOrders.length > 0 && (
-                <TabsTrigger value="service">Serviços ({contact.serviceOrders.length})</TabsTrigger>
+                <TabsTrigger value="service">{t.contacts.tabService} ({contact.serviceOrders.length})</TabsTrigger>
               )}
-              <TabsTrigger value="notes">Notas</TabsTrigger>
+              <TabsTrigger value="notes">{t.contacts.tabNotes}</TabsTrigger>
             </TabsList>
 
             {/* Sales */}
@@ -231,15 +265,24 @@ export default async function ContactDetailPage({ params }: Props) {
               <Card>
                 <CardContent className="p-0">
                   {contact.salesOrders.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-8">Sem encomendas de venda.</p>
+                    <div className="flex flex-col items-center justify-center py-10 gap-3">
+                      <p className="text-sm text-muted-foreground">{t.contacts.noSalesOrders}</p>
+                      {isCustomer && (
+                        <Button size="sm" variant="outline" asChild>
+                          <Link href={`/dashboard/sales/orders/new?customerId=${contact.id}`}>
+                            <Plus className="h-3.5 w-3.5 mr-1.5" />{t.contacts.newQuote}
+                          </Link>
+                        </Button>
+                      )}
+                    </div>
                   ) : (
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Número</TableHead>
-                          <TableHead>Data</TableHead>
-                          <TableHead>Estado</TableHead>
-                          <TableHead className="text-right">Total</TableHead>
+                          <TableHead>{t.contacts.colNumber}</TableHead>
+                          <TableHead>{t.contacts.colDate}</TableHead>
+                          <TableHead>{t.contacts.colStatus}</TableHead>
+                          <TableHead className="text-right">{t.contacts.colTotal}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -249,7 +292,11 @@ export default async function ContactDetailPage({ params }: Props) {
                               <Link href={`/dashboard/sales/orders/${o.id}`} className="font-mono font-medium hover:underline text-primary">{o.number}</Link>
                             </TableCell>
                             <TableCell className="text-muted-foreground text-sm">{fmtDate(o.createdAt)}</TableCell>
-                            <TableCell><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[o.status] ?? "bg-gray-100 text-gray-600"}`}>{o.status}</span></TableCell>
+                            <TableCell>
+                              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[o.status] ?? "bg-gray-100 text-gray-600"}`}>
+                                {statusLabel(o.status, t)}
+                              </span>
+                            </TableCell>
                             <TableCell className="text-right font-mono text-sm">{fmt(o.total)} AOA</TableCell>
                           </TableRow>
                         ))}
@@ -265,15 +312,15 @@ export default async function ContactDetailPage({ params }: Props) {
               <Card>
                 <CardContent className="p-0">
                   {contact.purchaseOrders.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-8">Sem ordens de compra.</p>
+                    <p className="text-sm text-muted-foreground text-center py-8">{t.contacts.noPurchaseOrders}</p>
                   ) : (
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Número</TableHead>
-                          <TableHead>Data</TableHead>
-                          <TableHead>Estado</TableHead>
-                          <TableHead className="text-right">Total</TableHead>
+                          <TableHead>{t.contacts.colNumber}</TableHead>
+                          <TableHead>{t.contacts.colDate}</TableHead>
+                          <TableHead>{t.contacts.colStatus}</TableHead>
+                          <TableHead className="text-right">{t.contacts.colTotal}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -283,7 +330,11 @@ export default async function ContactDetailPage({ params }: Props) {
                               <Link href={`/dashboard/purchasing/orders/${o.id}`} className="font-mono font-medium hover:underline text-primary">{o.number}</Link>
                             </TableCell>
                             <TableCell className="text-muted-foreground text-sm">{fmtDate(o.createdAt)}</TableCell>
-                            <TableCell><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[o.status] ?? "bg-gray-100 text-gray-600"}`}>{o.status}</span></TableCell>
+                            <TableCell>
+                              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[o.status] ?? "bg-gray-100 text-gray-600"}`}>
+                                {statusLabel(o.status, t)}
+                              </span>
+                            </TableCell>
                             <TableCell className="text-right font-mono text-sm">{fmt(o.total)} AOA</TableCell>
                           </TableRow>
                         ))}
@@ -299,16 +350,16 @@ export default async function ContactDetailPage({ params }: Props) {
               {contact.invoices.length > 0 && (
                 <Card>
                   <CardContent className="p-0">
-                    <div className="px-4 py-2.5 border-b font-semibold text-sm">Faturas de Venda</div>
+                    <div className="px-4 py-2.5 border-b font-semibold text-sm">{t.contacts.salesInvoices}</div>
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Número</TableHead>
-                          <TableHead>Data</TableHead>
-                          <TableHead>Vencimento</TableHead>
-                          <TableHead>Estado</TableHead>
-                          <TableHead className="text-right">Total</TableHead>
-                          <TableHead className="text-right">Em aberto</TableHead>
+                          <TableHead>{t.contacts.colNumber}</TableHead>
+                          <TableHead>{t.contacts.colDate}</TableHead>
+                          <TableHead>{t.contacts.colDueDate}</TableHead>
+                          <TableHead>{t.contacts.colStatus}</TableHead>
+                          <TableHead className="text-right">{t.contacts.colTotal}</TableHead>
+                          <TableHead className="text-right">{t.contacts.colOutstanding}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -319,7 +370,11 @@ export default async function ContactDetailPage({ params }: Props) {
                             </TableCell>
                             <TableCell className="text-muted-foreground text-sm">{fmtDate(inv.invoiceDate)}</TableCell>
                             <TableCell className="text-muted-foreground text-sm">{fmtDate(inv.dueDate)}</TableCell>
-                            <TableCell><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[inv.status] ?? "bg-gray-100 text-gray-600"}`}>{inv.status}</span></TableCell>
+                            <TableCell>
+                              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[inv.status] ?? "bg-gray-100 text-gray-600"}`}>
+                                {statusLabel(inv.status, t)}
+                              </span>
+                            </TableCell>
                             <TableCell className="text-right font-mono text-sm">{fmt(inv.total)} AOA</TableCell>
                             <TableCell className={`text-right font-mono text-sm ${inv.amountDue > 0 ? "text-orange-600 font-semibold" : "text-muted-foreground"}`}>{fmt(inv.amountDue)} AOA</TableCell>
                           </TableRow>
@@ -332,15 +387,15 @@ export default async function ContactDetailPage({ params }: Props) {
               {contact.supplierBills.length > 0 && (
                 <Card>
                   <CardContent className="p-0">
-                    <div className="px-4 py-2.5 border-b font-semibold text-sm">Faturas de Fornecedor</div>
+                    <div className="px-4 py-2.5 border-b font-semibold text-sm">{t.contacts.supplierInvoicesLabel}</div>
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Número</TableHead>
-                          <TableHead>Data</TableHead>
-                          <TableHead>Estado</TableHead>
-                          <TableHead className="text-right">Total</TableHead>
-                          <TableHead className="text-right">Em aberto</TableHead>
+                          <TableHead>{t.contacts.colNumber}</TableHead>
+                          <TableHead>{t.contacts.colDate}</TableHead>
+                          <TableHead>{t.contacts.colStatus}</TableHead>
+                          <TableHead className="text-right">{t.contacts.colTotal}</TableHead>
+                          <TableHead className="text-right">{t.contacts.colOutstanding}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -350,7 +405,11 @@ export default async function ContactDetailPage({ params }: Props) {
                               <Link href={`/dashboard/purchasing/bills/${b.id}`} className="font-mono font-medium hover:underline text-primary">{b.number}</Link>
                             </TableCell>
                             <TableCell className="text-muted-foreground text-sm">{fmtDate(b.billDate)}</TableCell>
-                            <TableCell><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[b.status] ?? "bg-gray-100 text-gray-600"}`}>{b.status}</span></TableCell>
+                            <TableCell>
+                              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[b.status] ?? "bg-gray-100 text-gray-600"}`}>
+                                {statusLabel(b.status, t)}
+                              </span>
+                            </TableCell>
                             <TableCell className="text-right font-mono text-sm">{fmt(b.total)} AOA</TableCell>
                             <TableCell className={`text-right font-mono text-sm ${b.amountDue > 0 ? "text-orange-600 font-semibold" : "text-muted-foreground"}`}>{fmt(b.amountDue)} AOA</TableCell>
                           </TableRow>
@@ -361,7 +420,7 @@ export default async function ContactDetailPage({ params }: Props) {
                 </Card>
               )}
               {contact.invoices.length === 0 && contact.supplierBills.length === 0 && (
-                <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">Sem movimentos contabilísticos.</CardContent></Card>
+                <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">{t.contacts.noAccountingData}</CardContent></Card>
               )}
             </TabsContent>
 
@@ -372,9 +431,9 @@ export default async function ContactDetailPage({ params }: Props) {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Número</TableHead>
-                        <TableHead>Data</TableHead>
-                        <TableHead>Estado</TableHead>
+                        <TableHead>{t.contacts.colNumber}</TableHead>
+                        <TableHead>{t.contacts.colDate}</TableHead>
+                        <TableHead>{t.contacts.colStatus}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -384,7 +443,11 @@ export default async function ContactDetailPage({ params }: Props) {
                             <Link href={`/dashboard/field-service/${o.id}`} className="font-mono font-medium hover:underline text-primary">{o.number}</Link>
                           </TableCell>
                           <TableCell className="text-muted-foreground text-sm">{fmtDate(o.createdAt)}</TableCell>
-                          <TableCell><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[o.status] ?? "bg-gray-100 text-gray-600"}`}>{o.status}</span></TableCell>
+                          <TableCell>
+                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[o.status] ?? "bg-gray-100 text-gray-600"}`}>
+                              {statusLabel(o.status, t)}
+                            </span>
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -402,7 +465,7 @@ export default async function ContactDetailPage({ params }: Props) {
                       {contact.notes}
                     </div>
                   ) : (
-                    <p className="text-sm text-muted-foreground">Sem notas ainda.</p>
+                    <p className="text-sm text-muted-foreground">{t.contacts.noNotes}</p>
                   )}
                   <Separator />
                   <ContactNoteForm action={addNote} />
