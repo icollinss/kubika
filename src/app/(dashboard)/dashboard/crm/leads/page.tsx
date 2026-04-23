@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus } from "lucide-react";
 import { ViewSwitcher, type ViewMode } from "@/components/views/view-switcher";
-import { KanbanBoard, type KanbanColumn } from "@/components/views/kanban-board";
 import { PivotTable, type PivotRow } from "@/components/views/pivot-table";
+import { CrmKanbanBoard } from "@/components/crm/crm-kanban-board";
 
 type LeadSource = "FACEBOOK" | "INSTAGRAM" | "LINKEDIN" | "TIKTOK" | "YOUTUBE" | "WHATSAPP" | "WEBSITE" | "REFERRAL" | "MANUAL" | "OTHER";
 type LeadStatus = "NEW" | "CONTACTED" | "QUALIFIED" | "PROPOSAL" | "WON" | "LOST";
@@ -26,8 +26,6 @@ const sourceLabel: Record<LeadSource, string> = {
   WEBSITE: "Website", REFERRAL: "Referral", MANUAL: "Manual", OTHER: "Other",
 };
 
-const STAGE_ORDER: LeadStatus[] = ["NEW", "CONTACTED", "QUALIFIED", "PROPOSAL", "WON", "LOST"];
-
 function fmt(n: number) { return n.toLocaleString("pt-AO", { minimumFractionDigits: 0 }); }
 
 interface Props { searchParams: Promise<{ view?: string }> }
@@ -36,27 +34,6 @@ export default async function LeadsListPage({ searchParams }: Props) {
   const { view = "list" } = await searchParams;
   const leads = await getLeads();
   const currentView = (view as ViewMode) || "list";
-
-  // ── Kanban ────────────────────────────────────────────────────────────────
-  const kanbanColumns: KanbanColumn[] = STAGE_ORDER.map((s) => ({
-    id: s, label: statusConfig[s].label, accent: statusConfig[s].accent,
-    count: 0, total: 0, cards: [],
-  }));
-  for (const l of leads) {
-    const col = kanbanColumns.find((k) => k.id === l.status);
-    if (!col) continue;
-    col.count++;
-    col.total = (col.total ?? 0) + (l.expectedValue ?? 0);
-    col.cards.push({
-      id: l.id, href: `/dashboard/crm/leads/${l.id}`,
-      title: l.name,
-      subtitle: l.company ?? l.email ?? undefined,
-      tag: sourceLabel[l.source as LeadSource],
-      tagColor: "bg-muted text-muted-foreground",
-      value: l.expectedValue ?? undefined,
-      initials: l.name.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase(),
-    });
-  }
 
   // ── Pivot: by source ──────────────────────────────────────────────────────
   const sourceMap = new Map<string, { count: number; total: number }>();
@@ -122,7 +99,7 @@ export default async function LeadsListPage({ searchParams }: Props) {
               </Table>
             </div>
           )}
-          {currentView === "kanban" && <KanbanBoard columns={kanbanColumns} />}
+          {currentView === "kanban" && <CrmKanbanBoard leads={leads} />}
           {currentView === "pivot" && <PivotTable rows={pivotRows} groupLabel="Fonte" showTotal />}
         </>
       )}
