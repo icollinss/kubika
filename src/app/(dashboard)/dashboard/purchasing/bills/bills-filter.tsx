@@ -9,8 +9,9 @@ export function BillsFilter() {
   return (
     <Select defaultValue={searchParams.get("status") ?? "ALL"}
       onValueChange={(v) => {
-        const params = new URLSearchParams();
+        const params = new URLSearchParams(searchParams.toString());
         if (v !== "ALL") params.set("status", v);
+        else params.delete("status");
         router.push(`/dashboard/purchasing/bills?${params.toString()}`);
       }}>
       <SelectTrigger className="w-44"><SelectValue placeholder="All statuses" /></SelectTrigger>

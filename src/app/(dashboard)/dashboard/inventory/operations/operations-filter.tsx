@@ -11,8 +11,9 @@ export function OperationsFilter() {
     <Select
       defaultValue={searchParams.get("type") ?? "ALL"}
       onValueChange={(v) => {
-        const params = new URLSearchParams();
+        const params = new URLSearchParams(searchParams.toString());
         if (v !== "ALL") params.set("type", v);
+        else params.delete("type");
         router.push(`/dashboard/inventory/operations?${params.toString()}`);
       }}
     >
